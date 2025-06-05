@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, DollarSign, Users, FileImage } from 'lucide-react';
+import { Calendar, DollarSign, Users, FileImage, TrendingDown } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 
 export const DashboardView: React.FC = () => {
@@ -24,7 +24,7 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatsCard
           title="Consultas Hoje"
           value={12}
@@ -40,11 +40,18 @@ export const DashboardView: React.FC = () => {
           color="sage"
         />
         <StatsCard
+          title="Despesa do Dia"
+          value="R$ 320"
+          icon={TrendingDown}
+          trend={{ value: 5.2, isPositive: false }}
+          color="nude"
+        />
+        <StatsCard
           title="Pacientes Ativos"
           value={248}
           icon={Users}
           trend={{ value: 3.1, isPositive: true }}
-          color="nude"
+          color="sage"
         />
         <StatsCard
           title="Exames Pendentes"
@@ -85,28 +92,46 @@ export const DashboardView: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo Financeiro</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo Financeiro Diário</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Receitas do Mês</span>
-              <span className="font-semibold text-green-600">R$ 18.500,00</span>
+              <span className="text-gray-600">Receitas do Dia</span>
+              <span className="font-semibold text-green-600">R$ 1.200,00</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Despesas do Mês</span>
-              <span className="font-semibold text-red-600">R$ 7.200,00</span>
+              <span className="text-gray-600">Despesas do Dia</span>
+              <span className="font-semibold text-red-600">R$ 320,00</span>
             </div>
             <hr className="border-gray-200" />
             <div className="flex justify-between items-center">
-              <span className="font-medium text-gray-900">Lucro Líquido</span>
-              <span className="font-bold text-dental-gold text-lg">R$ 11.300,00</span>
+              <span className="font-medium text-gray-900">Lucro do Dia</span>
+              <span className="font-bold text-dental-gold text-lg">R$ 880,00</span>
             </div>
             
             <div className="mt-4 p-4 bg-dental-cream rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Meta Mensal: R$ 20.000</p>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-dental-gold h-2 rounded-full" style={{ width: '92.5%' }}></div>
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Resumo Mensal</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Receita Mensal</span>
+                  <span className="font-medium text-green-600">R$ 18.500</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Despesa Mensal</span>
+                  <span className="font-medium text-red-600">R$ 7.200</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium">
+                  <span>Lucro Mensal</span>
+                  <span className="text-dental-gold">R$ 11.300</span>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">92.5% da meta alcançada</p>
+              
+              <div className="mt-3">
+                <p className="text-xs text-gray-600 mb-2">Meta Mensal: R$ 20.000</p>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-dental-gold h-2 rounded-full" style={{ width: '92.5%' }}></div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">92.5% da meta alcançada</p>
+              </div>
             </div>
           </div>
         </div>

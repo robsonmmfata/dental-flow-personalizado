@@ -1,288 +1,333 @@
 
 import React, { useState } from 'react';
-import { Settings, Bell, Shield, Palette, Database, Mail, Clock } from 'lucide-react';
+import { Settings, Bell, Shield, Palette, Database, Mail, Save, Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 export const SettingsView: React.FC = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState({
-    // Notificações
-    emailNotifications: true,
-    smsNotifications: false,
-    appointmentReminders: true,
-    paymentReminders: true,
-    
-    // Aparência
-    theme: 'light',
-    language: 'pt-br',
-    dateFormat: 'dd/mm/yyyy',
-    
-    // Agenda
-    workingHours: {
-      start: '08:00',
-      end: '18:00',
-      lunchStart: '12:00',
-      lunchEnd: '13:00'
+    notifications: {
+      email: true,
+      sms: false,
+      push: true,
+      reminders: true
     },
-    appointmentDuration: 60,
-    
-    // Sistema
-    autoBackup: true,
-    dataRetention: 365,
-    requirePassword: true
+    clinic: {
+      name: 'Clínica DentalCare',
+      phone: '(11) 3333-4444',
+      email: 'contato@dentalcare.com',
+      address: 'Rua das Flores, 123 - São Paulo, SP',
+      workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      workingHours: {
+        start: '08:00',
+        end: '18:00'
+      }
+    },
+    appearance: {
+      theme: 'light',
+      language: 'pt-BR',
+      dateFormat: 'DD/MM/YYYY'
+    },
+    backup: {
+      autoBackup: true,
+      frequency: 'daily',
+      retention: '30'
+    }
   });
 
   const handleSave = () => {
-    console.log('Configurações salvas:', settings);
+    console.log('Salvando configurações:', settings);
     toast({
       title: "Configurações salvas!",
-      description: "Suas preferências foram atualizadas com sucesso",
+      description: "Todas as alterações foram aplicadas com sucesso.",
     });
   };
 
-  const updateSetting = (key: string, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+  const handleBackup = () => {
+    console.log('Gerando backup...');
+    toast({
+      title: "Backup iniciado!",
+      description: "O backup dos dados está sendo gerado.",
+    });
   };
 
-  const updateWorkingHours = (key: string, value: string) => {
-    setSettings(prev => ({
-      ...prev,
-      workingHours: { ...prev.workingHours, [key]: value }
-    }));
+  const handleRestore = () => {
+    console.log('Restaurando backup...');
+    toast({
+      title: "Restauração iniciada!",
+      description: "Os dados estão sendo restaurados.",
+    });
   };
+
+  const weekDays = [
+    { id: 'monday', label: 'Segunda-feira' },
+    { id: 'tuesday', label: 'Terça-feira' },
+    { id: 'wednesday', label: 'Quarta-feira' },
+    { id: 'thursday', label: 'Quinta-feira' },
+    { id: 'friday', label: 'Sexta-feira' },
+    { id: 'saturday', label: 'Sábado' },
+    { id: 'sunday', label: 'Domingo' },
+  ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
-          <p className="text-gray-600 mt-1">Personalize o sistema conforme suas preferências</p>
+          <p className="text-gray-600 mt-1">Personalize o sistema conforme suas necessidades</p>
         </div>
-        <Button 
-          onClick={handleSave}
-          className="bg-dental-gold hover:bg-dental-gold-dark text-white"
-        >
-          Salvar Configurações
+        <Button onClick={handleSave} className="bg-dental-gold hover:bg-dental-gold-dark text-white">
+          <Save size={16} className="mr-2" />
+          Salvar Alterações
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Notificações */}
+        {/* Configurações da Clínica */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Bell size={18} className="text-dental-gold" />
-            Notificações
-          </h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="font-medium text-gray-900">Notificações por Email</label>
-                <p className="text-sm text-gray-500">Receber emails sobre agendamentos e lembretes</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.emailNotifications}
-                  onChange={(e) => updateSetting('emailNotifications', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dental-gold"></div>
-              </label>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="font-medium text-gray-900">Notificações SMS</label>
-                <p className="text-sm text-gray-500">Receber SMS para lembretes importantes</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.smsNotifications}
-                  onChange={(e) => updateSetting('smsNotifications', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dental-gold"></div>
-              </label>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="font-medium text-gray-900">Lembretes de Consulta</label>
-                <p className="text-sm text-gray-500">Enviar lembretes automáticos aos pacientes</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.appointmentReminders}
-                  onChange={(e) => updateSetting('appointmentReminders', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dental-gold"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Aparência */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Palette size={18} className="text-dental-gold" />
-            Aparência
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Settings size={20} className="text-dental-gold" />
+            Informações da Clínica
           </h3>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tema</label>
-              <select
-                value={settings.theme}
-                onChange={(e) => updateSetting('theme', e.target.value)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nome da clínica</label>
+              <input
+                type="text"
+                value={settings.clinic.name}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  clinic: { ...settings.clinic, name: e.target.value }
+                })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-              >
-                <option value="light">Claro</option>
-                <option value="dark">Escuro</option>
-                <option value="auto">Automático</option>
-              </select>
+              />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Idioma</label>
-              <select
-                value={settings.language}
-                onChange={(e) => updateSetting('language', e.target.value)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+              <input
+                type="tel"
+                value={settings.clinic.phone}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  clinic: { ...settings.clinic, phone: e.target.value }
+                })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-              >
-                <option value="pt-br">Português (Brasil)</option>
-                <option value="en">English</option>
-                <option value="es">Español</option>
-              </select>
+              />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Formato de Data</label>
-              <select
-                value={settings.dateFormat}
-                onChange={(e) => updateSetting('dateFormat', e.target.value)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+              <input
+                type="email"
+                value={settings.clinic.email}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  clinic: { ...settings.clinic, email: e.target.value }
+                })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-              >
-                <option value="dd/mm/yyyy">DD/MM/AAAA</option>
-                <option value="mm/dd/yyyy">MM/DD/AAAA</option>
-                <option value="yyyy-mm-dd">AAAA-MM-DD</option>
-              </select>
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+              <textarea
+                value={settings.clinic.address}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  clinic: { ...settings.clinic, address: e.target.value }
+                })}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
+              />
             </div>
           </div>
         </div>
 
         {/* Horários de Funcionamento */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Clock size={18} className="text-dental-gold" />
-            Horários de Funcionamento
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Horários de Funcionamento</h3>
           
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Início</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Abertura</label>
                 <input
                   type="time"
-                  value={settings.workingHours.start}
-                  onChange={(e) => updateWorkingHours('start', e.target.value)}
+                  value={settings.clinic.workingHours.start}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    clinic: {
+                      ...settings.clinic,
+                      workingHours: { ...settings.clinic.workingHours, start: e.target.value }
+                    }
+                  })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fim</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fechamento</label>
                 <input
                   type="time"
-                  value={settings.workingHours.end}
-                  onChange={(e) => updateWorkingHours('end', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Almoço - Início</label>
-                <input
-                  type="time"
-                  value={settings.workingHours.lunchStart}
-                  onChange={(e) => updateWorkingHours('lunchStart', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Almoço - Fim</label>
-                <input
-                  type="time"
-                  value={settings.workingHours.lunchEnd}
-                  onChange={(e) => updateWorkingHours('lunchEnd', e.target.value)}
+                  value={settings.clinic.workingHours.end}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    clinic: {
+                      ...settings.clinic,
+                      workingHours: { ...settings.clinic.workingHours, end: e.target.value }
+                    }
+                  })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
                 />
               </div>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Duração padrão das consultas</label>
-              <select
-                value={settings.appointmentDuration}
-                onChange={(e) => updateSetting('appointmentDuration', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-              >
-                <option value={30}>30 minutos</option>
-                <option value={45}>45 minutos</option>
-                <option value={60}>60 minutos</option>
-                <option value={90}>90 minutos</option>
-              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Dias de funcionamento</label>
+              <div className="space-y-2">
+                {weekDays.map((day) => (
+                  <label key={day.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={settings.clinic.workingDays.includes(day.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSettings({
+                            ...settings,
+                            clinic: {
+                              ...settings.clinic,
+                              workingDays: [...settings.clinic.workingDays, day.id]
+                            }
+                          });
+                        } else {
+                          setSettings({
+                            ...settings,
+                            clinic: {
+                              ...settings.clinic,
+                              workingDays: settings.clinic.workingDays.filter(d => d !== day.id)
+                            }
+                          });
+                        }
+                      }}
+                      className="rounded border-gray-300 text-dental-gold focus:ring-dental-gold"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{day.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Segurança */}
+        {/* Notificações */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Shield size={18} className="text-dental-gold" />
-            Segurança e Backup
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Bell size={20} className="text-dental-gold" />
+            Notificações
           </h3>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <label className="flex items-center justify-between">
               <div>
-                <label className="font-medium text-gray-900">Backup Automático</label>
-                <p className="text-sm text-gray-500">Fazer backup diário dos dados</p>
+                <div className="font-medium text-gray-900">Notificações por e-mail</div>
+                <div className="text-sm text-gray-600">Receba atualizações por e-mail</div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.autoBackup}
-                  onChange={(e) => updateSetting('autoBackup', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dental-gold"></div>
-              </label>
-            </div>
+              <input
+                type="checkbox"
+                checked={settings.notifications.email}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  notifications: { ...settings.notifications, email: e.target.checked }
+                })}
+                className="rounded border-gray-300 text-dental-gold focus:ring-dental-gold"
+              />
+            </label>
+            
+            <label className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-gray-900">Notificações SMS</div>
+                <div className="text-sm text-gray-600">Receba lembretes por SMS</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.notifications.sms}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  notifications: { ...settings.notifications, sms: e.target.checked }
+                })}
+                className="rounded border-gray-300 text-dental-gold focus:ring-dental-gold"
+              />
+            </label>
+            
+            <label className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-gray-900">Lembretes de consulta</div>
+                <div className="text-sm text-gray-600">Enviar lembretes automáticos</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.notifications.reminders}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  notifications: { ...settings.notifications, reminders: e.target.checked }
+                })}
+                className="rounded border-gray-300 text-dental-gold focus:ring-dental-gold"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Backup e Segurança */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Database size={20} className="text-dental-gold" />
+            Backup e Segurança
+          </h3>
+          
+          <div className="space-y-4">
+            <label className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-gray-900">Backup automático</div>
+                <div className="text-sm text-gray-600">Fazer backup dos dados automaticamente</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.backup.autoBackup}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  backup: { ...settings.backup, autoBackup: e.target.checked }
+                })}
+                className="rounded border-gray-300 text-dental-gold focus:ring-dental-gold"
+              />
+            </label>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Retenção de dados (dias)</label>
-              <input
-                type="number"
-                value={settings.dataRetention}
-                onChange={(e) => updateSetting('dataRetention', parseInt(e.target.value))}
-                min="30"
-                max="3650"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Frequência do backup</label>
+              <select
+                value={settings.backup.frequency}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  backup: { ...settings.backup, frequency: e.target.value }
+                })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-              />
+              >
+                <option value="daily">Diário</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+              </select>
             </div>
             
-            <div className="pt-4">
-              <Button variant="outline" className="w-full mb-2">
-                Alterar Senha
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleBackup} variant="outline" className="flex-1">
+                <Download size={16} className="mr-2" />
+                Fazer Backup
               </Button>
-              <Button variant="outline" className="w-full">
-                Fazer Backup Manual
+              <Button onClick={handleRestore} variant="outline" className="flex-1">
+                <Upload size={16} className="mr-2" />
+                Restaurar
               </Button>
             </div>
           </div>

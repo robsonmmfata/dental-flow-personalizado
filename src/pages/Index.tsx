@@ -9,7 +9,11 @@ import { ExamsView } from '@/components/Exams/ExamsView';
 import { ProfileView } from '@/components/Profile/ProfileView';
 import { SettingsView } from '@/components/Settings/SettingsView';
 
-const Index = () => {
+interface IndexProps {
+  onLogout: () => void;
+}
+
+const Index: React.FC<IndexProps> = ({ onLogout }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
 
   const renderContent = () => {
@@ -35,7 +39,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-dental-cream to-white flex">
-      <DentalSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <DentalSidebar 
+        activeSection={activeSection} 
+        onSectionChange={setActiveSection}
+        onLogout={onLogout}
+      />
       <div className="flex-1 overflow-auto">
         {renderContent()}
       </div>

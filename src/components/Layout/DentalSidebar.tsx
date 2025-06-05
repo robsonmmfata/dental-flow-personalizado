@@ -1,11 +1,13 @@
 
 import React from 'react';
-import { Calendar, DollarSign, Users, FileImage, BarChart3, Settings, User } from 'lucide-react';
+import { Calendar, DollarSign, Users, FileImage, BarChart3, Settings, User, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  onLogout: () => void;
 }
 
 const menuItems = [
@@ -18,10 +20,10 @@ const menuItems = [
   { id: 'configuracoes', label: 'Configurações', icon: Settings },
 ];
 
-export const DentalSidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => {
+export const DentalSidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange, onLogout }) => {
   return (
-    <div className="w-64 h-screen bg-gradient-to-b from-dental-cream to-dental-nude shadow-lg">
-      <div className="p-6">
+    <div className="w-64 h-screen bg-gradient-to-b from-dental-cream to-dental-nude shadow-lg flex flex-col">
+      <div className="p-6 flex-1">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-gradient-to-r from-dental-gold to-dental-gold-light rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-lg">🦷</span>
@@ -54,11 +56,20 @@ export const DentalSidebar: React.FC<SidebarProps> = ({ activeSection, onSection
         </nav>
       </div>
       
-      <div className="absolute bottom-4 left-4 right-4">
+      <div className="p-4 space-y-4">
         <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
           <p className="text-xs text-gray-600 mb-1">Usuário logado:</p>
           <p className="font-semibold text-gray-800">Dr. João Silva</p>
         </div>
+        
+        <Button
+          onClick={onLogout}
+          variant="outline"
+          className="w-full border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+        >
+          <LogOut size={16} className="mr-2" />
+          Sair
+        </Button>
       </div>
     </div>
   );
