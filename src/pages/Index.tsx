@@ -5,6 +5,7 @@ import { DashboardView } from '@/components/Dashboard/DashboardView';
 import { SchedulingView } from '@/components/Scheduling/SchedulingView';
 import { PatientsView } from '@/components/Patients/PatientsView';
 import { FinancialView } from '@/components/Financial/FinancialView';
+import { BudgetsView } from '@/components/Budgets/BudgetsView';
 import { ExamsView } from '@/components/Exams/ExamsView';
 import { ProfileView } from '@/components/Profile/ProfileView';
 import { SettingsView } from '@/components/Settings/SettingsView';
@@ -26,6 +27,8 @@ const Index: React.FC<IndexProps> = ({ onLogout }) => {
         return <PatientsView />;
       case 'financeiro':
         return <FinancialView />;
+      case 'orcamentos':
+        return <BudgetsView />;
       case 'exames':
         return <ExamsView />;
       case 'perfil':

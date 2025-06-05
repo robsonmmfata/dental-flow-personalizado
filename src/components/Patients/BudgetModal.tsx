@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, Plus, Trash2, CreditCard, Smartphone, Banknote } from 'lucide-react';
+import { FileText, Plus, Trash2, CreditCard, Smartphone, Banknote, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { OdontogramComponent } from './OdontogramComponent';
 
@@ -45,7 +44,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
     { id: 'pix', name: 'PIX', icon: Smartphone },
     { id: 'credit', name: 'Cartão de Crédito', icon: CreditCard },
     { id: 'debit', name: 'Cartão de Débito', icon: CreditCard },
-    { id: 'cash', name: 'Dinheiro', icon: Banknote }
+    { id: 'cash', name: 'Dinheiro', icon: Banknote },
+    { id: 'boleto', name: 'Boleto', icon: Receipt }
   ];
 
   const addProcedure = () => {
@@ -87,16 +87,33 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
       return;
     }
 
-    console.log('Orçamento criado:', { 
+    const budgetData = { 
       patient, 
       procedures, 
       total: totalPrice, 
-      paymentMethod 
-    });
+      paymentMethod,
+      createdAt: new Date().toISOString(),
+      status: 'pendente'
+    };
+    
+    console.log('Orçamento criado:', budgetData);
+    
+    // Simular adição à lista de transações financeiras
+    const transaction = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      description: `Orçamento - ${patient?.name}`,
+      type: 'receita',
+      value: totalPrice,
+      category: 'Orçamentos',
+      status: 'pendente'
+    };
+    
+    console.log('Transação criada:', transaction);
     
     toast({
       title: "Orçamento criado!",
-      description: `Orçamento para ${patient?.name} no valor de R$ ${totalPrice.toFixed(2)}`,
+      description: `Orçamento para ${patient?.name} no valor de R$ ${totalPrice.toFixed(2)} foi criado e adicionado às transações.`,
     });
     onClose();
   };
