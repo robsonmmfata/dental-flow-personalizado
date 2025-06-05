@@ -2,9 +2,18 @@
 import React, { useState } from 'react';
 import { Users, Plus, User, Calendar, FileImage } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { NewPatientModal } from './NewPatientModal';
+import { BudgetModal } from './BudgetModal';
+import { NewAppointmentModal } from '../Scheduling/NewAppointmentModal';
+import { useToast } from '@/hooks/use-toast';
 
 export const PatientsView: React.FC = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showNewPatientModal, setShowNewPatientModal] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
   
   const patients = [
     { 
@@ -41,6 +50,18 @@ export const PatientsView: React.FC = () => {
     patient.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleScheduleAppointment = (patient: any) => {
+    setSelectedPatient(patient);
+    setShowAppointmentModal(true);
+    console.log('Agendando consulta para:', patient.name);
+  };
+
+  const handleCreateBudget = (patient: any) => {
+    setSelectedPatient(patient);
+    setShowBudgetModal(true);
+    console.log('Criando orçamento para:', patient.name);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -48,7 +69,10 @@ export const PatientsView: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Pacientes</h1>
           <p className="text-gray-600 mt-1">Gerencie o cadastro de pacientes</p>
         </div>
-        <Button className="bg-dental-gold hover:bg-dental-gold-dark text-white">
+        <Button 
+          onClick={() => setShowNewPatientModal(true)}
+          className="bg-dental-gold hover:bg-dental-gold-dark text-white"
+        >
           <Plus size={16} className="mr-2" />
           Novo Paciente
         </Button>
@@ -118,11 +142,21 @@ export const PatientsView: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="text-dental-gold border-dental-gold hover:bg-dental-gold hover:text-white">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleScheduleAppointment(patient)}
+                        className="text-dental-gold border-dental-gold hover:bg-dental-gold hover:text-white"
+                      >
                         <Calendar size={14} className="mr-1" />
                         Agendar
                       </Button>
-                      <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleCreateBudget(patient)}
+                        className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
+                      >
                         <FileImage size={14} className="mr-1" />
                         Orçamento
                       </Button>
@@ -143,6 +177,23 @@ export const PatientsView: React.FC = () => {
           )}
         </div>
       </div>
+
+      <NewPatientModal 
+        isOpen={showNewPatientModal} 
+        onClose={() => setShowNewPatientModal(false)} 
+      />
+      
+      <BudgetModal 
+        isOpen={showBudgetModal} 
+        onClose={() => setShowBudgetModal(false)}
+        patient={selectedPatient}
+      />
+      
+      <NewAppointmentModal 
+        isOpen={showAppointmentModal} 
+        onClose={() => setShowAppointmentModal(false)}
+        selectedDate={new Date()}
+      />
     </div>
   );
 };

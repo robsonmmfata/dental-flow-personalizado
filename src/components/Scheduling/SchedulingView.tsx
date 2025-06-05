@@ -1,11 +1,18 @@
 
 import React, { useState } from 'react';
-import { Calendar, Plus, Clock, User } from 'lucide-react';
+import { Calendar, Plus, Clock, User, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { NewAppointmentModal } from './NewAppointmentModal';
+import { EditAppointmentModal } from './EditAppointmentModal';
+import { useToast } from '@/hooks/use-toast';
 
 export const SchedulingView: React.FC = () => {
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
 
   const appointments = [
     { id: 1, time: '09:00', duration: 60, patient: 'Maria Silva', type: 'Limpeza', doctor: 'Dr. João' },
@@ -13,6 +20,28 @@ export const SchedulingView: React.FC = () => {
     { id: 3, time: '14:00', duration: 45, patient: 'Ana Costa', type: 'Ortodontia', doctor: 'Dra. Maria' },
     { id: 4, time: '15:30', duration: 30, patient: 'Pedro Lima', type: 'Consulta', doctor: 'Dr. João' },
   ];
+
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    console.log('Data selecionada:', date);
+    toast({
+      title: "Data selecionada",
+      description: `Agenda para ${date.toLocaleDateString('pt-BR')}`,
+    });
+  };
+
+  const handleEditAppointment = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowEditModal(true);
+  };
+
+  const handleConfirmAppointment = (appointment: any) => {
+    console.log('Consulta confirmada:', appointment);
+    toast({
+      title: "Consulta confirmada!",
+      description: `Consulta de ${appointment.patient} às ${appointment.time} foi confirmada`,
+    });
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -40,7 +69,10 @@ export const SchedulingView: React.FC = () => {
               Semana
             </button>
           </div>
-          <Button className="bg-dental-gold hover:bg-dental-gold-dark text-white">
+          <Button 
+            onClick={() => setShowNewModal(true)}
+            className="bg-dental-gold hover:bg-dental-gold-dark text-white"
+          >
             <Plus size={16} className="mr-2" />
             Nova Consulta
           </Button>
@@ -59,12 +91,16 @@ export const SchedulingView: React.FC = () => {
                 const date = new Date();
                 date.setDate(date.getDate() + i);
                 const isToday = i === 0;
+                const isSelected = date.toDateString() === selectedDate.toDateString();
                 return (
                   <button
                     key={i}
+                    onClick={() => handleDateClick(date)}
                     className={`w-full text-left p-3 rounded-lg transition-colors ${
-                      isToday 
+                      isSelected
                         ? 'bg-dental-gold text-white' 
+                        : isToday 
+                        ? 'bg-dental-gold/70 text-white' 
                         : 'hover:bg-dental-cream text-gray-700'
                     }`}
                   >
@@ -86,7 +122,7 @@ export const SchedulingView: React.FC = () => {
             <div className="p-6 border-b border-gray-100">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 <Clock size={18} />
-                Consultas de Hoje
+                Consultas - {viewMode === 'day' ? 'Hoje' : 'Esta Semana'}
               </h3>
               <p className="text-sm text-gray-600 mt-1">
                 {selectedDate.toLocaleDateString('pt-BR', { 
@@ -117,10 +153,21 @@ export const SchedulingView: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="text-dental-gold border-dental-gold hover:bg-dental-gold hover:text-white">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleEditAppointment(appointment)}
+                        className="text-dental-gold border-dental-gold hover:bg-dental-gold hover:text-white"
+                      >
                         Editar
                       </Button>
-                      <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleConfirmAppointment(appointment)}
+                        className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+                      >
+                        <Check size={14} className="mr-1" />
                         Confirmar
                       </Button>
                     </div>
@@ -138,6 +185,18 @@ export const SchedulingView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <NewAppointmentModal 
+        isOpen={showNewModal} 
+        onClose={() => setShowNewModal(false)}
+        selectedDate={selectedDate}
+      />
+      
+      <EditAppointmentModal 
+        isOpen={showEditModal} 
+        onClose={() => setShowEditModal(false)}
+        appointment={selectedAppointment}
+      />
     </div>
   );
 };

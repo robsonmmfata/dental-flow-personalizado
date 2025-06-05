@@ -1,11 +1,14 @@
-
 import React, { useState } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '../Dashboard/StatsCard';
+import { TransactionModal } from './TransactionModal';
+import { FilterModal } from './FilterModal';
 
 export const FinancialView: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   
   const transactions = [
     { id: 1, date: '2024-01-15', description: 'Consulta - Maria Silva', type: 'receita', value: 150, category: 'Consultas' },
@@ -23,11 +26,18 @@ export const FinancialView: React.FC = () => {
           <p className="text-gray-600 mt-1">Gerencie receitas, despesas e relatórios</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="border-dental-gold text-dental-gold hover:bg-dental-gold hover:text-white">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowFilterModal(true)}
+            className="border-dental-gold text-dental-gold hover:bg-dental-gold hover:text-white"
+          >
             <Filter size={16} className="mr-2" />
             Filtros
           </Button>
-          <Button className="bg-dental-gold hover:bg-dental-gold-dark text-white">
+          <Button 
+            onClick={() => setShowTransactionModal(true)}
+            className="bg-dental-gold hover:bg-dental-gold-dark text-white"
+          >
             <Plus size={16} className="mr-2" />
             Nova Transação
           </Button>
@@ -142,6 +152,16 @@ export const FinancialView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <TransactionModal 
+        isOpen={showTransactionModal} 
+        onClose={() => setShowTransactionModal(false)} 
+      />
+      
+      <FilterModal 
+        isOpen={showFilterModal} 
+        onClose={() => setShowFilterModal(false)} 
+      />
     </div>
   );
 };

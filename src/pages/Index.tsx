@@ -5,6 +5,9 @@ import { DashboardView } from '@/components/Dashboard/DashboardView';
 import { SchedulingView } from '@/components/Scheduling/SchedulingView';
 import { PatientsView } from '@/components/Patients/PatientsView';
 import { FinancialView } from '@/components/Financial/FinancialView';
+import { ExamsView } from '@/components/Exams/ExamsView';
+import { ProfileView } from '@/components/Profile/ProfileView';
+import { SettingsView } from '@/components/Settings/SettingsView';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -20,11 +23,11 @@ const Index = () => {
       case 'financeiro':
         return <FinancialView />;
       case 'exames':
-        return <div className="p-6"><h1 className="text-3xl font-bold">Exames</h1><p>Módulo em desenvolvimento...</p></div>;
+        return <ExamsView />;
       case 'perfil':
-        return <div className="p-6"><h1 className="text-3xl font-bold">Perfil</h1><p>Módulo em desenvolvimento...</p></div>;
+        return <ProfileView />;
       case 'configuracoes':
-        return <div className="p-6"><h1 className="text-3xl font-bold">Configurações</h1><p>Módulo em desenvolvimento...</p></div>;
+        return <SettingsView />;
       default:
         return <DashboardView />;
     }
