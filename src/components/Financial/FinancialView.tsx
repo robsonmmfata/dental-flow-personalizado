@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Plus, Filter, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { TransactionModal } from './TransactionModal';
 import { FilterModal } from './FilterModal';
 
 export const FinancialView: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [selectedPeriod, setSelectedPeriod] = useState('day');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   
@@ -67,55 +66,29 @@ export const FinancialView: React.FC = () => {
         </div>
       </div>
 
-      {selectedPeriod === 'day' ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatsCard
-            title="Receitas do Dia"
-            value="R$ 1.200"
-            icon={TrendingUp}
-            trend={{ value: 12.5, isPositive: true }}
-            color="sage"
-          />
-          <StatsCard
-            title="Despesas do Dia"
-            value="R$ 320"
-            icon={TrendingDown}
-            trend={{ value: 5.2, isPositive: false }}
-            color="nude"
-          />
-          <StatsCard
-            title="Lucro do Dia"
-            value="R$ 880"
-            icon={DollarSign}
-            trend={{ value: 18.3, isPositive: true }}
-            color="gold"
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatsCard
-            title="Receitas do Mês"
-            value="R$ 18.500"
-            icon={TrendingUp}
-            trend={{ value: 15.3, isPositive: true }}
-            color="sage"
-          />
-          <StatsCard
-            title="Despesas do Mês"
-            value="R$ 7.200"
-            icon={TrendingDown}
-            trend={{ value: 8.1, isPositive: false }}
-            color="nude"
-          />
-          <StatsCard
-            title="Lucro Líquido"
-            value="R$ 11.300"
-            icon={DollarSign}
-            trend={{ value: 22.5, isPositive: true }}
-            color="gold"
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatsCard
+          title={selectedPeriod === 'day' ? "Receita do Dia" : "Receitas do Mês"}
+          value={selectedPeriod === 'day' ? "R$ 1.200" : "R$ 18.500"}
+          icon={TrendingUp}
+          trend={{ value: selectedPeriod === 'day' ? 12.5 : 15.3, isPositive: true }}
+          color="sage"
+        />
+        <StatsCard
+          title={selectedPeriod === 'day' ? "Despesa do Dia" : "Despesas do Mês"}
+          value={selectedPeriod === 'day' ? "R$ 320" : "R$ 7.200"}
+          icon={TrendingDown}
+          trend={{ value: selectedPeriod === 'day' ? 5.2 : 8.1, isPositive: false }}
+          color="nude"
+        />
+        <StatsCard
+          title={selectedPeriod === 'day' ? "Lucro Líquido Diário" : "Lucro Líquido Mensal"}
+          value={selectedPeriod === 'day' ? "R$ 880" : "R$ 11.300"}
+          icon={DollarSign}
+          trend={{ value: selectedPeriod === 'day' ? 18.3 : 22.5, isPositive: true }}
+          color="gold"
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">

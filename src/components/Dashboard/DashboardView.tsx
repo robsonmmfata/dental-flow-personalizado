@@ -33,8 +33,8 @@ export const DashboardView: React.FC = () => {
           color="gold"
         />
         <StatsCard
-          title="Receita Mensal"
-          value="R$ 18.500"
+          title="Receita do Dia"
+          value="R$ 1.200"
           icon={DollarSign}
           trend={{ value: 15.3, isPositive: true }}
           color="sage"
