@@ -4,17 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { FileText, CreditCard, Smartphone, Banknote, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Budget {
-  id: number;
-  patientName: string;
-  procedures: string[];
-  totalValue: number;
-  paymentMethod: string;
-  status: 'pendente' | 'pago' | 'vencido';
-  createdAt: string;
-  dueDate: string;
-}
+import { budgetStore, Budget } from '@/stores/budgetStore';
 
 interface EditBudgetModalProps {
   isOpen: boolean;
@@ -38,7 +28,8 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({ isOpen, onClos
 
   useEffect(() => {
     if (budget) {
-      setPaymentMethod(budget.paymentMethod.toLowerCase().replace(/\s+/g, ''));
+      const methodId = paymentMethods.find(pm => pm.name === budget.paymentMethod)?.id || 'pix';
+      setPaymentMethod(methodId);
       setStatus(budget.status);
       setDueDate(budget.dueDate);
     }
@@ -47,18 +38,21 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({ isOpen, onClos
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Atualizando orçamento:', { 
-      id: budget?.id,
-      paymentMethod, 
-      status, 
-      dueDate 
-    });
-    
-    toast({
-      title: "Orçamento atualizado!",
-      description: `Orçamento #${budget?.id} foi atualizado com sucesso.`,
-    });
-    onClose();
+    if (budget) {
+      const selectedPaymentMethod = paymentMethods.find(pm => pm.id === paymentMethod)?.name || paymentMethod;
+      
+      budgetStore.updateBudget(budget.id, { 
+        paymentMethod: selectedPaymentMethod, 
+        status: status as 'pendente' | 'pago' | 'vencido', 
+        dueDate 
+      });
+      
+      toast({
+        title: "Orçamento atualizado!",
+        description: `Orçamento #${budget.id} foi atualizado com sucesso.`,
+      });
+      onClose();
+    }
   };
 
   if (!budget) return null;

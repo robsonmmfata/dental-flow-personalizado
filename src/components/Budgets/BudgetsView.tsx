@@ -1,20 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { FileText, Edit, Check, Clock, DollarSign, Eye, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { EditBudgetModal } from './EditBudgetModal';
 import { budgetStore, Budget } from '@/stores/budgetStore';
-
-interface Budget {
-  id: number;
-  patientName: string;
-  procedures: string[];
-  totalValue: number;
-  paymentMethod: string;
-  status: 'pendente' | 'pago' | 'vencido';
-  createdAt: string;
-  dueDate: string;
-}
 
 export const BudgetsView: React.FC = () => {
   const { toast } = useToast();
