@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Eye, Download, User, Calendar, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateExamPDF } from '@/utils/pdfGenerator';
 
 interface ViewExamModalProps {
   isOpen: boolean;
@@ -15,11 +16,13 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
   const { toast } = useToast();
 
   const handleDownload = () => {
-    console.log('Baixando exame:', exam?.fileName);
-    toast({
-      title: "Download iniciado!",
-      description: `Fazendo download de ${exam?.fileName}`,
-    });
+    if (exam) {
+      generateExamPDF(exam);
+      toast({
+        title: "Download iniciado!",
+        description: `Download do exame de ${exam.patientName} realizado com sucesso.`,
+      });
+    }
   };
 
   if (!exam) return null;
@@ -43,9 +46,9 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
                   Informações do Paciente
                 </h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="font-medium">Nome:</span> {exam.patient}</div>
-                  <div><span className="font-medium">Tipo de Exame:</span> {exam.type}</div>
-                  <div><span className="font-medium">Descrição:</span> {exam.description}</div>
+                  <div><span className="font-medium">Nome:</span> {exam.patientName}</div>
+                  <div><span className="font-medium">Tipo de Exame:</span> {exam.examType}</div>
+                  <div><span className="font-medium">Status:</span> {exam.status}</div>
                 </div>
               </div>
               
@@ -56,9 +59,7 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div><span className="font-medium">Data:</span> {new Date(exam.date).toLocaleDateString('pt-BR')}</div>
-                  <div><span className="font-medium">Profissional:</span> {exam.doctor}</div>
-                  <div><span className="font-medium">Arquivo:</span> {exam.fileName}</div>
-                  <div><span className="font-medium">Tamanho:</span> {exam.fileSize}</div>
+                  <div><span className="font-medium">Arquivos:</span> {exam.files.length > 0 ? exam.files.join(', ') : 'Nenhum arquivo'}</div>
                 </div>
               </div>
             </div>
@@ -67,14 +68,12 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
                 <FileText size={64} className="mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-600 mb-2">Visualização do arquivo</p>
-                <p className="text-sm text-gray-500 mb-4">{exam.fileName}</p>
+                <p className="text-sm text-gray-500 mb-4">{exam.examType}</p>
                 <p className="text-xs text-gray-400">
-                  {exam.type === 'Raio-X' && 'Imagem radiográfica'}
-                  {exam.type === 'Tomografia' && 'Arquivo DICOM'}
-                  {exam.type === 'Foto Intraoral' && 'Fotografia intraoral'}
-                  {exam.type === 'Foto Extraoral' && 'Fotografia extraoral'}
-                  {exam.type === 'Moldagem' && 'Arquivo 3D'}
-                  {exam.type === 'Outros' && 'Arquivo anexo'}
+                  {exam.examType === 'Radiografia Panorâmica' && 'Imagem radiográfica panorâmica'}
+                  {exam.examType === 'Tomografia' && 'Arquivo DICOM de tomografia'}
+                  {exam.examType === 'Radiografia Periapical' && 'Radiografia periapical'}
+                  {!['Radiografia Panorâmica', 'Tomografia', 'Radiografia Periapical'].includes(exam.examType) && 'Arquivo anexo do exame'}
                 </p>
               </div>
               
@@ -84,7 +83,7 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
                   className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white"
                 >
                   <Download size={16} className="mr-2" />
-                  Baixar Arquivo
+                  Baixar PDF
                 </Button>
               </div>
             </div>
@@ -93,7 +92,7 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-semibold text-gray-900 mb-2">Observações</h4>
             <p className="text-gray-600 text-sm">
-              {exam.notes || 'Nenhuma observação adicional registrada para este exame.'}
+              {exam.observations || 'Nenhuma observação adicional registrada para este exame.'}
             </p>
           </div>
           

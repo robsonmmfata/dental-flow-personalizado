@@ -8,6 +8,13 @@ interface LoginViewProps {
   onLoginSuccess: () => void;
 }
 
+// Usuários cadastrados (simulado - em produção seria um banco de dados)
+const registeredUsers = [
+  { email: 'admin@dentalcare.com', password: '123456', name: 'Dr. Admin', role: 'admin' },
+  { email: 'dentista@dentalcare.com', password: '123456', name: 'Dr. Silva', role: 'dentist' },
+  { email: 'assistente@dentalcare.com', password: '123456', name: 'Ana Costa', role: 'assistant' }
+];
+
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
@@ -17,35 +24,63 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     password: '',
     name: '',
     confirmPassword: '',
-    role: 'admin'
+    role: 'dentist'
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isLogin && formData.password !== formData.confirmPassword) {
+    if (isLogin) {
+      // Verificar login
+      const user = registeredUsers.find(u => 
+        u.email === formData.email && u.password === formData.password
+      );
+      
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        toast({
+          title: "Login realizado!",
+          description: `Bem-vindo, ${user.name}!`,
+        });
+        setTimeout(() => {
+          onLoginSuccess();
+        }, 1000);
+      } else {
+        toast({
+          title: "Erro no login",
+          description: "Email ou senha incorretos.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Cadastro
+      if (formData.password !== formData.confirmPassword) {
+        toast({
+          title: "Erro",
+          description: "As senhas não coincidem",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const newUser = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        role: formData.role
+      };
+
+      // Simular cadastro (em produção salvaria no banco)
+      console.log('Novo usuário cadastrado:', newUser);
+      
       toast({
-        title: "Erro",
-        description: "As senhas não coincidem",
-        variant: "destructive"
+        title: "Cadastro realizado!",
+        description: "Conta criada com sucesso! Faça login para continuar.",
       });
-      return;
+      
+      setIsLogin(true);
+      setFormData({ email: '', password: '', name: '', confirmPassword: '', role: 'dentist' });
     }
-
-    // Simular login/cadastro
-    console.log(isLogin ? 'Login:' : 'Cadastro:', formData);
-    
-    toast({
-      title: isLogin ? "Login realizado!" : "Cadastro realizado!",
-      description: isLogin 
-        ? "Bem-vindo ao DentalCare!" 
-        : "Conta criada com sucesso! Redirecionando...",
-    });
-
-    // Simular delay e então chamar onLoginSuccess
-    setTimeout(() => {
-      onLoginSuccess();
-    }, 1000);
   };
 
   return (
@@ -86,6 +121,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               Cadastro
             </button>
           </div>
+
+          {isLogin && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800 font-medium">Usuários de teste:</p>
+              <p className="text-xs text-blue-600">admin@dentalcare.com - 123456</p>
+              <p className="text-xs text-blue-600">dentista@dentalcare.com - 123456</p>
+              <p className="text-xs text-blue-600">assistente@dentalcare.com - 123456</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (

@@ -1,9 +1,9 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Edit, Check, Clock, DollarSign, Eye, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { EditBudgetModal } from './EditBudgetModal';
+import { budgetStore, Budget } from '@/stores/budgetStore';
 
 interface Budget {
   id: number;
@@ -21,55 +21,37 @@ export const BudgetsView: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('todos');
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
 
-  const budgets: Budget[] = [
-    {
-      id: 1,
-      patientName: 'Maria Silva',
-      procedures: ['Limpeza', 'Restauração'],
-      totalValue: 450.00,
-      paymentMethod: 'PIX',
-      status: 'pendente',
-      createdAt: '2024-01-15',
-      dueDate: '2024-01-25'
-    },
-    {
-      id: 2,
-      patientName: 'João Santos',
-      procedures: ['Canal', 'Coroa'],
-      totalValue: 1200.00,
-      paymentMethod: 'Cartão de Crédito',
-      status: 'pago',
-      createdAt: '2024-01-10',
-      dueDate: '2024-01-20'
-    },
-    {
-      id: 3,
-      patientName: 'Ana Costa',
-      procedures: ['Implante'],
-      totalValue: 2500.00,
-      paymentMethod: 'Boleto',
-      status: 'vencido',
-      createdAt: '2024-01-05',
-      dueDate: '2024-01-15'
-    }
-  ];
+  useEffect(() => {
+    // Carregar orçamentos do store
+    setBudgets(budgetStore.getAllBudgets());
+  }, []);
 
   const filteredBudgets = budgets.filter(budget => 
     selectedStatus === 'todos' || budget.status === selectedStatus
   );
 
   const handleConfirmPayment = (budgetId: number) => {
-    toast({
-      title: "Pagamento confirmado!",
-      description: "O orçamento foi marcado como pago e adicionado às transações.",
-    });
-    console.log('Confirmando pagamento do orçamento:', budgetId);
+    const updatedBudget = budgetStore.updateBudget(budgetId, { status: 'pago' });
+    if (updatedBudget) {
+      setBudgets(budgetStore.getAllBudgets());
+      toast({
+        title: "Pagamento confirmado!",
+        description: "O orçamento foi marcado como pago e adicionado às transações.",
+      });
+    }
   };
 
   const handleEditBudget = (budget: Budget) => {
     setSelectedBudget(budget);
     setShowEditModal(true);
+  };
+
+  const handleEditComplete = () => {
+    setBudgets(budgetStore.getAllBudgets());
+    setShowEditModal(false);
+    setSelectedBudget(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -261,7 +243,7 @@ export const BudgetsView: React.FC = () => {
 
       <EditBudgetModal 
         isOpen={showEditModal} 
-        onClose={() => setShowEditModal(false)}
+        onClose={handleEditComplete}
         budget={selectedBudget}
       />
     </div>

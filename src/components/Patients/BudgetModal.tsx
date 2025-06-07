@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Plus, Trash2, CreditCard, Smartphone, Banknote, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { OdontogramComponent } from './OdontogramComponent';
+import { budgetStore } from '@/stores/budgetStore';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -87,34 +88,30 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
       return;
     }
 
-    const budgetData = { 
-      patient, 
-      procedures, 
-      total: totalPrice, 
-      paymentMethod,
+    const paymentMethodName = paymentMethods.find(pm => pm.id === paymentMethod)?.name || paymentMethod;
+    
+    // Adicionar orçamento ao store global
+    const newBudget = budgetStore.addBudget({
+      patientName: patient?.name || 'Paciente',
+      procedures: procedures.filter(p => p.name).map(p => p.name),
+      totalValue: totalPrice,
+      paymentMethod: paymentMethodName,
+      status: 'pendente',
       createdAt: new Date().toISOString(),
-      status: 'pendente'
-    };
+      dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 10 dias
+    });
     
-    console.log('Orçamento criado:', budgetData);
-    
-    // Simular adição à lista de transações financeiras
-    const transaction = {
-      id: Date.now(),
-      date: new Date().toISOString(),
-      description: `Orçamento - ${patient?.name}`,
-      type: 'receita',
-      value: totalPrice,
-      category: 'Orçamentos',
-      status: 'pendente'
-    };
-    
-    console.log('Transação criada:', transaction);
+    console.log('Orçamento criado:', newBudget);
     
     toast({
       title: "Orçamento criado!",
-      description: `Orçamento para ${patient?.name} no valor de R$ ${totalPrice.toFixed(2)} foi criado e adicionado às transações.`,
+      description: `Orçamento para ${patient?.name} no valor de R$ ${totalPrice.toFixed(2)} foi criado e está disponível na seção Orçamentos.`,
     });
+    
+    // Resetar formulário
+    setProcedures([{ id: 1, name: '', teeth: [], price: 0 }]);
+    setPaymentMethod('');
+    setSelectedTeethForProcedure(1);
     onClose();
   };
 
@@ -231,7 +228,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
 
           <div>
             <h4 className="font-semibold text-gray-900 mb-3">Método de Pagamento</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {paymentMethods.map((method) => {
                 const Icon = method.icon;
                 return (
