@@ -1,73 +1,38 @@
-# Welcome to your Lovable project
+# 🦷 Dental Flow Personalizado
 
-## Project info
+Sistema completo e personalizável para clínicas odontológicas, desenvolvido com foco em agilidade, organização e controle de pacientes, consultas e pagamentos.
 
-**URL**: https://lovable.dev/projects/6f21b067-d655-4825-b992-97e178ace632
+## ✨ Funcionalidades Principais
 
-## How can I edit this code?
+- 📅 **Agenda inteligente**: Gerenciamento de consultas com interface intuitiva.
+- 👩‍⚕️ **Cadastro de pacientes**: Registro detalhado com histórico e anotações.
+- 💳 **Controle financeiro**: Pagamentos, planos e recebimentos integrados.
+- 📈 **Relatórios e estatísticas**: Acompanhamento de desempenho da clínica.
+- 📤 **Backup e segurança**: Armazenamento seguro de dados.
+- 🎨 **Design Personalizado**: Visual adaptado à identidade visual da clínica.
 
-There are several ways of editing your application.
+## 🛠️ Tecnologias Utilizadas
 
-**Use Lovable**
+- **Frontend:** React.js, TailwindCSS
+- **Backend:** Node.js, Express.js
+- **Banco de Dados:** MongoDB
+- **Autenticação:** JWT
+- **Outros:** Vite, Prisma (opcional), Axios, React Hook Form
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6f21b067-d655-4825-b992-97e178ace632) and start prompting.
+## 🚀 Como rodar o projeto localmente
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/robsonmmfata/dental-flow-personalizado.git
+   cd dental-flow-personalizado
+   Instale as dependências:
+   npm install
+   3. Configure as variáveis de ambiente
+    PORT=3000
+    MONGO_URI=seu_mongo_url
+    JWT_SECRET=sua_chave_secreta
+    4. Inicie o servidor
+     npm run dev
 
-**Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/6f21b067-d655-4825-b992-97e178ace632) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
