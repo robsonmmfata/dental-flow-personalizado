@@ -10,7 +10,8 @@ import {
   User, 
   LogOut,
   BarChart3,
-  UserCog
+  UserCog,
+  Stethoscope
 } from 'lucide-react';
 
 interface DentalSidebarProps {
@@ -28,6 +29,7 @@ export const DentalSidebar: React.FC<DentalSidebarProps> = ({
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'agendamento', label: 'Agendamento', icon: Calendar },
     { id: 'pacientes', label: 'Pacientes', icon: Users },
+    { id: 'doutores', label: 'Doutores', icon: Stethoscope },
     { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
     { id: 'orcamentos', label: 'Orçamentos', icon: FileText },
     { id: 'exames', label: 'Exames', icon: FileImage },

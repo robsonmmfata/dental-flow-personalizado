@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { X, Calendar, Clock, User, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { appointmentStore } from '@/stores/appointmentStore';
+import { doctorStore } from '@/stores/doctorStore';
 
 interface NewAppointmentModalProps {
   isOpen: boolean;
@@ -16,9 +18,11 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
   selectedDate 
 }) => {
   const { toast } = useToast();
+  const activeDoctors = doctorStore.getActiveDoctors();
+  
   const [formData, setFormData] = useState({
     patientName: '',
-    dentist: 'Dr. Silva',
+    dentist: activeDoctors.length > 0 ? activeDoctors[0].name : '',
     date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     time: '09:00',
     service: 'Consulta',
@@ -34,6 +38,15 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
       toast({
         title: "Erro",
         description: "Nome do paciente é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.dentist) {
+      toast({
+        title: "Erro",
+        description: "Selecione um dentista",
         variant: "destructive"
       });
       return;
@@ -58,7 +71,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
     onClose();
     setFormData({
       patientName: '',
-      dentist: 'Dr. Silva',
+      dentist: activeDoctors.length > 0 ? activeDoctors[0].name : '',
       date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       time: '09:00',
       service: 'Consulta',
@@ -100,15 +113,24 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Dentista</label>
-            <select
-              value={formData.dentist}
-              onChange={(e) => setFormData({...formData, dentist: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-            >
-              <option value="Dr. Silva">Dr. Silva</option>
-              <option value="Dra. Santos">Dra. Santos</option>
-              <option value="Dr. Costa">Dr. Costa</option>
-            </select>
+            {activeDoctors.length > 0 ? (
+              <select
+                value={formData.dentist}
+                onChange={(e) => setFormData({...formData, dentist: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
+                required
+              >
+                {activeDoctors.map((doctor) => (
+                  <option key={doctor.id} value={doctor.name}>
+                    {doctor.name} - {doctor.specialty}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">
+                Nenhum doutor ativo cadastrado. Cadastre doutores na seção "Doutores" primeiro.
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -190,6 +212,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
             <Button 
               type="submit"
               className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white"
+              disabled={activeDoctors.length === 0}
             >
               Agendar
             </Button>

@@ -4,6 +4,7 @@ import { DentalSidebar } from '@/components/Layout/DentalSidebar';
 import { DashboardView } from '@/components/Dashboard/DashboardView';
 import { SchedulingView } from '@/components/Scheduling/SchedulingView';
 import { PatientsView } from '@/components/Patients/PatientsView';
+import { DoctorsView } from '@/components/Doctors/DoctorsView';
 import { FinancialView } from '@/components/Financial/FinancialView';
 import { BudgetsView } from '@/components/Budgets/BudgetsView';
 import { ExamsView } from '@/components/Exams/ExamsView';
@@ -26,6 +27,8 @@ const Index: React.FC<IndexProps> = ({ onLogout }) => {
         return <SchedulingView />;
       case 'pacientes':
         return <PatientsView />;
+      case 'doutores':
+        return <DoctorsView />;
       case 'financeiro':
         return <FinancialView />;
       case 'orcamentos':
