@@ -2,6 +2,9 @@
 interface Appointment {
   id: number;
   patientName: string;
+  patientId: number;
+  doctorName: string;
+  doctorId: number;
   dentist: string;
   date: string;
   time: string;
@@ -16,6 +19,9 @@ class AppointmentStore {
     {
       id: 1,
       patientName: 'João Silva',
+      patientId: 1,
+      doctorName: 'Dr. Silva',
+      doctorId: 1,
       dentist: 'Dr. Silva',
       date: new Date().toISOString().split('T')[0],
       time: '09:00',
@@ -27,6 +33,9 @@ class AppointmentStore {
     {
       id: 2,
       patientName: 'Maria Santos',
+      patientId: 2,
+      doctorName: 'Dr. Silva',
+      doctorId: 1,
       dentist: 'Dr. Silva',
       date: new Date().toISOString().split('T')[0],
       time: '10:30',
