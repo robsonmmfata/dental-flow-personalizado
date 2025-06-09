@@ -68,6 +68,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
       patientId: formData.patientId,
       doctorName: selectedDoctor?.name || '',
       doctorId: formData.doctorId,
+      dentist: selectedDoctor?.name || '',
       date: formData.date,
       time: formData.time,
       service: formData.service,
