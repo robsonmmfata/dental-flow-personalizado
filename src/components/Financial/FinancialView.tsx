@@ -1,23 +1,46 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Plus, Filter, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '../Dashboard/StatsCard';
 import { TransactionModal } from './TransactionModal';
 import { FilterModal } from './FilterModal';
+import { financialStore, Transaction } from '@/stores/financialStore';
 
 export const FinancialView: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('day');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [todayStats, setTodayStats] = useState({
+    revenue: 0,
+    expenses: 0,
+    profit: 0
+  });
   
-  const transactions = [
-    { id: 1, date: '2024-01-15', description: 'Consulta - Maria Silva', type: 'receita', value: 150, category: 'Consultas', status: 'confirmado' },
-    { id: 2, date: '2024-01-15', description: 'Orçamento - João Santos', type: 'receita', value: 800, category: 'Orçamentos', status: 'pendente' },
-    { id: 3, date: '2024-01-15', description: 'Material Odontológico', type: 'despesa', value: -320, category: 'Materiais', status: 'confirmado' },
-    { id: 4, date: '2024-01-14', description: 'Energia Elétrica', type: 'despesa', value: -180, category: 'Fixos', status: 'confirmado' },
-    { id: 5, date: '2024-01-13', description: 'Orçamento - Ana Costa', type: 'receita', value: 2500, category: 'Orçamentos', status: 'pendente' },
-  ];
+  const today = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    const updateData = () => {
+      const allTransactions = financialStore.getAllTransactions();
+      setTransactions(allTransactions);
+      
+      const revenue = financialStore.getRevenueByDate(today);
+      const expenses = financialStore.getExpensesByDate(today);
+      const profit = financialStore.getDailyProfit(today);
+      
+      setTodayStats({ revenue, expenses, profit });
+      console.log('Financeiro atualizado:', { revenue, expenses, profit });
+    };
+
+    updateData();
+    const unsubscribe = financialStore.subscribe(updateData);
+    
+    return unsubscribe;
+  }, [today]);
+
+  const handleTransactionAdded = () => {
+    // Os dados serão atualizados automaticamente através do subscription
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -70,23 +93,23 @@ export const FinancialView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard
           title="Receita do Dia"
-          value="R$ 1.200"
+          value={`R$ ${todayStats.revenue.toFixed(2)}`}
           icon={TrendingUp}
           trend={{ value: 12.5, isPositive: true }}
           color="sage"
         />
         <StatsCard
           title="Despesa do Dia"
-          value="R$ 320"
+          value={`R$ ${todayStats.expenses.toFixed(2)}`}
           icon={TrendingDown}
           trend={{ value: 5.2, isPositive: false }}
           color="nude"
         />
         <StatsCard
           title="Lucro Líquido Diário"
-          value="R$ 880"
+          value={`R$ ${todayStats.profit.toFixed(2)}`}
           icon={DollarSign}
-          trend={{ value: 18.3, isPositive: true }}
+          trend={{ value: 18.3, isPositive: todayStats.profit > 0 }}
           color="gold"
         />
       </div>
@@ -99,14 +122,14 @@ export const FinancialView: React.FC = () => {
                 <DollarSign size={18} />
                 Transações Recentes
                 <span className="text-sm text-gray-500 ml-2">
-                  (Incluindo orçamentos)
+                  (Atualizadas em tempo real)
                 </span>
               </h3>
             </div>
             
             <div className="p-6">
               <div className="space-y-4">
-                {transactions.map((transaction) => (
+                {transactions.slice(0, 10).map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-dental-cream/30 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className={`w-3 h-3 rounded-full ${
@@ -127,11 +150,18 @@ export const FinancialView: React.FC = () => {
                     <div className={`font-semibold ${
                       transaction.type === 'receita' ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {transaction.type === 'receita' ? '+' : ''}R$ {Math.abs(transaction.value).toFixed(2)}
+                      {transaction.type === 'receita' ? '+' : '-'}R$ {transaction.value.toFixed(2)}
                     </div>
                   </div>
                 ))}
               </div>
+              
+              {transactions.length === 0 && (
+                <div className="text-center py-12">
+                  <DollarSign size={48} className="mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500">Nenhuma transação encontrada</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -148,24 +178,29 @@ export const FinancialView: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Progresso</span>
-                  <span>184.6%</span>
+                  <span>{((todayStats.revenue / 650) * 100).toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-dental-gold h-3 rounded-full" style={{ width: '100%' }}></div>
+                  <div 
+                    className="bg-dental-gold h-3 rounded-full" 
+                    style={{ width: `${Math.min((todayStats.revenue / 650) * 100, 100)}%` }}
+                  ></div>
                 </div>
-                <div className="text-xs text-gray-500">Meta diária superada!</div>
+                <div className="text-xs text-gray-500">
+                  {todayStats.revenue >= 650 ? 'Meta diária atingida!' : 'Continue trabalhando para atingir a meta'}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Categorias</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">Resumo por Categoria</h3>
             <div className="space-y-3">
               {[
-                { name: 'Consultas', amount: 850, color: 'bg-blue-500' },
-                { name: 'Orçamentos', amount: 3300, color: 'bg-purple-500' },
-                { name: 'Materiais', amount: -200, color: 'bg-red-500' },
-                { name: 'Fixos', amount: -120, color: 'bg-yellow-500' },
+                { name: 'Consultas', amount: transactions.filter(t => t.category === 'Consultas' && t.type === 'receita').reduce((sum, t) => sum + t.value, 0), color: 'bg-blue-500' },
+                { name: 'Orçamentos', amount: transactions.filter(t => t.category === 'Orçamentos' && t.type === 'receita').reduce((sum, t) => sum + t.value, 0), color: 'bg-purple-500' },
+                { name: 'Materiais', amount: transactions.filter(t => t.category === 'Materiais' && t.type === 'despesa').reduce((sum, t) => sum + t.value, 0), color: 'bg-red-500' },
+                { name: 'Fixos', amount: transactions.filter(t => t.category === 'Fixos' && t.type === 'despesa').reduce((sum, t) => sum + t.value, 0), color: 'bg-yellow-500' },
               ].map((category, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -173,9 +208,9 @@ export const FinancialView: React.FC = () => {
                     <span className="text-sm text-gray-700">{category.name}</span>
                   </div>
                   <span className={`text-sm font-medium ${
-                    category.amount > 0 ? 'text-green-600' : 'text-red-600'
+                    category.amount > 0 ? 'text-green-600' : 'text-gray-400'
                   }`}>
-                    R$ {Math.abs(category.amount).toLocaleString()}
+                    R$ {category.amount.toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -186,7 +221,8 @@ export const FinancialView: React.FC = () => {
 
       <TransactionModal 
         isOpen={showTransactionModal} 
-        onClose={() => setShowTransactionModal(false)} 
+        onClose={() => setShowTransactionModal(false)}
+        onTransactionAdded={handleTransactionAdded}
       />
       
       <FilterModal 

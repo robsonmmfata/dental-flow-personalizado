@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { appointmentStore } from '@/stores/appointmentStore';
 import { doctorStore, Doctor } from '@/stores/doctorStore';
 import { patientStore, Patient } from '@/stores/patientStore';
+import { financialStore } from '@/stores/financialStore';
 
 interface NewAppointmentModalProps {
   isOpen: boolean;
@@ -32,6 +32,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
     date: selectedDate.toISOString().split('T')[0],
     time: '',
     service: '',
+    serviceValue: 0,
     notes: ''
   });
 
@@ -76,6 +77,17 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
       status: 'agendado'
     });
 
+    // Adicionar transação financeira se valor foi especificado
+    if (formData.serviceValue > 0) {
+      financialStore.addAppointmentTransaction(
+        formData.patientName,
+        formData.service || 'Consulta',
+        formData.serviceValue,
+        formData.patientId,
+        newAppointment.id
+      );
+    }
+
     console.log('Nova consulta agendada:', newAppointment);
     
     toast({
@@ -87,7 +99,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
     setFormData({
       patientName: '', patientId: 0, doctorId: 0,
       date: selectedDate.toISOString().split('T')[0],
-      time: '', service: '', notes: ''
+      time: '', service: '', serviceValue: 0, notes: ''
     });
   };
 
@@ -174,6 +186,19 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
               onChange={(e) => setFormData({...formData, service: e.target.value})}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
               placeholder="Ex: Limpeza, Consulta, etc."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Valor do Serviço (R$)</label>
+            <input
+              type="number"
+              value={formData.serviceValue}
+              onChange={(e) => setFormData({...formData, serviceValue: Number(e.target.value)})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
             />
           </div>
           

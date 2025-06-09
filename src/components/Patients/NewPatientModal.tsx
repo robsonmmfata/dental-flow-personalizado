@@ -1,10 +1,10 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { User, Phone, Mail, MapPin } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Stethoscope } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { patientStore } from '@/stores/patientStore';
+import { doctorStore, Doctor } from '@/stores/doctorStore';
 
 interface NewPatientModalProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ interface NewPatientModalProps {
 
 export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClose, onPatientAdded }) => {
   const { toast } = useToast();
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,14 +28,26 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClos
     allergies: '',
     medications: '',
     notes: '',
+    preferredDoctorId: 0,
     status: 'ativo' as const
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      setDoctors(doctorStore.getActiveDoctors());
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Novo paciente:', formData);
     
-    const newPatient = patientStore.addPatient(formData);
+    const selectedDoctor = doctors.find(d => d.id === formData.preferredDoctorId);
+    
+    const newPatient = patientStore.addPatient({
+      ...formData,
+      preferredDoctor: selectedDoctor?.name || ''
+    });
     
     toast({
       title: "Paciente cadastrado!",
@@ -46,7 +59,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClos
     setFormData({
       name: '', email: '', phone: '', birthDate: '', cpf: '',
       address: '', city: '', emergencyContact: '', emergencyPhone: '',
-      allergies: '', medications: '', notes: '', status: 'ativo'
+      allergies: '', medications: '', notes: '', preferredDoctorId: 0, status: 'ativo'
     });
   };
 
@@ -114,6 +127,22 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClos
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
                 placeholder="000.000.000-00"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Doutor Preferido</label>
+              <select
+                value={formData.preferredDoctorId}
+                onChange={(e) => setFormData({...formData, preferredDoctorId: Number(e.target.value)})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
+              >
+                <option value={0}>Selecione um doutor</option>
+                {doctors.map((doctor) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    {doctor.name} - {doctor.specialty}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           

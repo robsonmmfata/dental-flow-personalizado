@@ -13,6 +13,7 @@ interface Patient {
   allergies: string;
   medications: string;
   notes: string;
+  preferredDoctor: string;
   status: 'ativo' | 'inativo';
   lastVisit: string;
   nextAppointment: string | null;
@@ -35,6 +36,7 @@ class PatientStore {
       allergies: 'Nenhuma',
       medications: 'Nenhum',
       notes: '',
+      preferredDoctor: 'Dr. Silva',
       lastVisit: '2024-01-10',
       nextAppointment: '2024-01-20',
       status: 'ativo',
@@ -54,6 +56,7 @@ class PatientStore {
       allergies: 'Penicilina',
       medications: 'Nenhum',
       notes: '',
+      preferredDoctor: 'Dra. Santos',
       lastVisit: '2024-01-08',
       nextAppointment: null,
       status: 'ativo',
@@ -73,6 +76,7 @@ class PatientStore {
       allergies: 'Nenhuma',
       medications: 'Vitamina D',
       notes: 'Paciente com histórico de bruxismo',
+      preferredDoctor: 'Dr. Costa',
       lastVisit: '2023-12-15',
       nextAppointment: '2024-01-25',
       status: 'inativo',
