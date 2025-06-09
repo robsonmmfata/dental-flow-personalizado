@@ -40,8 +40,14 @@ export const DentalSidebar: React.FC<DentalSidebarProps> = ({
     <div className="w-64 bg-white shadow-xl border-r border-gray-200 flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-dental-gold">DentalCare</h1>
-        <p className="text-sm text-gray-600">Sistema de Gestão</p>
+        <div className="w-24 h-16 mx-auto mb-2">
+          <img 
+            src="/lovable-uploads/a2ae9abc-d670-4c90-942c-c97d169a8824.png" 
+            alt="Espaço Sorriso" 
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <p className="text-sm text-gray-600 text-center">Sistema de Gestão</p>
       </div>
 
       {/* Navigation */}

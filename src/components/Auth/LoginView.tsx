@@ -51,10 +51,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-dental-gold to-dental-gold-light rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">🦷</span>
+            <div className="w-32 h-20 mx-auto mb-4 flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/a2ae9abc-d670-4c90-942c-c97d169a8824.png" 
+                alt="Espaço Sorriso" 
+                className="w-full h-full object-contain"
+              />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">DentalCare</h1>
             <p className="text-gray-600 mt-1">Sistema de Gestão Odontológica</p>
           </div>
 

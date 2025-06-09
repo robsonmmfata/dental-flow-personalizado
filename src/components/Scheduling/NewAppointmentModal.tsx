@@ -1,58 +1,39 @@
-
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { X, Calendar, Clock, User, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { appointmentStore } from '@/stores/appointmentStore';
 
 interface NewAppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: () => void;
+  selectedDate?: Date;
 }
 
 export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({ 
   isOpen, 
-  onClose, 
-  onSave 
+  onClose,
+  selectedDate 
 }) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     patientName: '',
     dentist: 'Dr. Silva',
-    date: new Date().toISOString().split('T')[0],
-    time: '',
-    service: '',
+    date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    time: '09:00',
+    service: 'Consulta',
     notes: ''
   });
 
-  const services = [
-    'Consulta',
-    'Limpeza',
-    'Restauração',
-    'Canal',
-    'Extração',
-    'Implante',
-    'Ortodontia',
-    'Clareamento',
-    'Prótese',
-    'Cirurgia'
-  ];
-
-  const timeSlots = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-    '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-    '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
-  ];
+  if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.patientName || !formData.time || !formData.service) {
+    if (!formData.patientName.trim()) {
       toast({
         title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
+        description: "Nome do paciente é obrigatório",
         variant: "destructive"
       });
       return;
@@ -67,41 +48,46 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
       status: 'agendado',
       notes: formData.notes
     });
-    
-    console.log('Novo agendamento criado:', newAppointment);
-    
+
     toast({
       title: "Agendamento criado!",
-      description: `Consulta de ${formData.patientName} agendada para ${new Date(formData.date).toLocaleDateString('pt-BR')} às ${formData.time}.`,
+      description: `Consulta agendada para ${formData.patientName}`,
     });
-    
-    // Reset form
+
+    console.log('Novo agendamento:', newAppointment);
+    onClose();
     setFormData({
       patientName: '',
       dentist: 'Dr. Silva',
-      date: new Date().toISOString().split('T')[0],
-      time: '',
-      service: '',
+      date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      time: '09:00',
+      service: 'Consulta',
       notes: ''
     });
-
-    if (onSave) onSave();
-    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Plus size={20} className="text-dental-gold" />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Calendar size={20} />
             Novo Agendamento
-          </DialogTitle>
-        </DialogHeader>
-        
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Paciente *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <User size={16} className="inline mr-1" />
+              Paciente
+            </label>
             <input
               type="text"
               value={formData.patientName}
@@ -120,14 +106,17 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
             >
               <option value="Dr. Silva">Dr. Silva</option>
-              <option value="Dra. Costa">Dra. Costa</option>
-              <option value="Dr. Santos">Dr. Santos</option>
+              <option value="Dra. Santos">Dra. Santos</option>
+              <option value="Dr. Costa">Dr. Costa</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Calendar size={16} className="inline mr-1" />
+                Data
+              </label>
               <input
                 type="date"
                 value={formData.date}
@@ -136,59 +125,77 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
                 required
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Horário *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Clock size={16} className="inline mr-1" />
+                Horário
+              </label>
               <select
                 value={formData.time}
                 onChange={(e) => setFormData({...formData, time: e.target.value})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-                required
               >
-                <option value="">Selecione</option>
-                {timeSlots.map(time => (
-                  <option key={time} value={time}>{time}</option>
-                ))}
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Serviço *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Serviço</label>
             <select
               value={formData.service}
               onChange={(e) => setFormData({...formData, service: e.target.value})}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
-              required
             >
-              <option value="">Selecione o serviço</option>
-              {services.map(service => (
-                <option key={service} value={service}>{service}</option>
-              ))}
+              <option value="Consulta">Consulta</option>
+              <option value="Limpeza">Limpeza</option>
+              <option value="Restauração">Restauração</option>
+              <option value="Extração">Extração</option>
+              <option value="Canal">Canal</option>
+              <option value="Ortodontia">Ortodontia</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <FileText size={16} className="inline mr-1" />
+              Observações
+            </label>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({...formData, notes: e.target.value})}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
               rows={3}
-              placeholder="Observações sobre o agendamento..."
+              placeholder="Observações sobre o agendamento"
             />
           </div>
-          
+
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className="flex-1"
+            >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white">
+            <Button 
+              type="submit"
+              className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white"
+            >
               Agendar
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
