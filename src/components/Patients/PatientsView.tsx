@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Plus, User, Calendar, FileImage } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NewPatientModal } from './NewPatientModal';
 import { BudgetModal } from './BudgetModal';
 import { NewAppointmentModal } from '../Scheduling/NewAppointmentModal';
 import { useToast } from '@/hooks/use-toast';
+import { patientStore, Patient } from '@/stores/patientStore';
 
 export const PatientsView: React.FC = () => {
   const { toast } = useToast();
@@ -14,36 +14,15 @@ export const PatientsView: React.FC = () => {
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [patients, setPatients] = useState<Patient[]>([]);
   
-  const patients = [
-    { 
-      id: 1, 
-      name: 'Maria Silva', 
-      email: 'maria@email.com', 
-      phone: '(11) 99999-9999',
-      lastVisit: '2024-01-10',
-      nextAppointment: '2024-01-20',
-      status: 'ativo'
-    },
-    { 
-      id: 2, 
-      name: 'João Santos', 
-      email: 'joao@email.com', 
-      phone: '(11) 88888-8888',
-      lastVisit: '2024-01-08',
-      nextAppointment: null,
-      status: 'ativo'
-    },
-    { 
-      id: 3, 
-      name: 'Ana Costa', 
-      email: 'ana@email.com', 
-      phone: '(11) 77777-7777',
-      lastVisit: '2023-12-15',
-      nextAppointment: '2024-01-25',
-      status: 'inativo'
-    },
-  ];
+  useEffect(() => {
+    setPatients(patientStore.getAllPatients());
+  }, []);
+
+  const handlePatientAdded = () => {
+    setPatients(patientStore.getAllPatients());
+  };
 
   const filteredPatients = patients.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,7 +96,7 @@ export const PatientsView: React.FC = () => {
                     <div className="text-center">
                       <div className="text-xs text-gray-500">Última consulta</div>
                       <div className="font-medium text-gray-900">
-                        {new Date(patient.lastVisit).toLocaleDateString('pt-BR')}
+                        {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString('pt-BR') : 'Nunca'}
                       </div>
                     </div>
                     
@@ -180,7 +159,8 @@ export const PatientsView: React.FC = () => {
 
       <NewPatientModal 
         isOpen={showNewPatientModal} 
-        onClose={() => setShowNewPatientModal(false)} 
+        onClose={() => setShowNewPatientModal(false)}
+        onPatientAdded={handlePatientAdded}
       />
       
       <BudgetModal 
@@ -193,6 +173,7 @@ export const PatientsView: React.FC = () => {
         isOpen={showAppointmentModal} 
         onClose={() => setShowAppointmentModal(false)}
         selectedDate={new Date()}
+        selectedPatient={selectedPatient}
       />
     </div>
   );

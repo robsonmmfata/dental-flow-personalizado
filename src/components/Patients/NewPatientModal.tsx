@@ -4,13 +4,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { User, Phone, Mail, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { patientStore } from '@/stores/patientStore';
 
 interface NewPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onPatientAdded?: () => void;
 }
 
-export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClose }) => {
+export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClose, onPatientAdded }) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
@@ -24,21 +26,27 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClos
     emergencyPhone: '',
     allergies: '',
     medications: '',
-    notes: ''
+    notes: '',
+    status: 'ativo' as const
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Novo paciente:', formData);
+    
+    const newPatient = patientStore.addPatient(formData);
+    
     toast({
       title: "Paciente cadastrado!",
       description: `${formData.name} foi adicionado com sucesso`,
     });
+    
+    onPatientAdded?.();
     onClose();
     setFormData({
       name: '', email: '', phone: '', birthDate: '', cpf: '',
       address: '', city: '', emergencyContact: '', emergencyPhone: '',
-      allergies: '', medications: '', notes: ''
+      allergies: '', medications: '', notes: '', status: 'ativo'
     });
   };
 
