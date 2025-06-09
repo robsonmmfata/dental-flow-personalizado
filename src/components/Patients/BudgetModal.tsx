@@ -5,6 +5,7 @@ import { FileText, Plus, Trash2, CreditCard, Smartphone, Banknote, Receipt } fro
 import { useToast } from '@/hooks/use-toast';
 import { OdontogramComponent } from './OdontogramComponent';
 import { budgetStore } from '@/stores/budgetStore';
+import { generateBudgetPDF } from '@/utils/pdfGenerator';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
     { id: 1, name: '', teeth: [], price: 0 }
   ]);
   const [paymentMethod, setPaymentMethod] = useState('');
+  const [installments, setInstallments] = useState(1);
   const [selectedTeethForProcedure, setSelectedTeethForProcedure] = useState<number>(1);
 
   const procedureTypes = [
@@ -89,13 +91,16 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
     }
 
     const paymentMethodName = paymentMethods.find(pm => pm.id === paymentMethod)?.name || paymentMethod;
+    const finalPaymentMethod = (paymentMethod === 'credit' || paymentMethod === 'debit') 
+      ? `${paymentMethodName} - ${installments}x`
+      : paymentMethodName;
     
     // Adicionar orçamento ao store global
     const newBudget = budgetStore.addBudget({
       patientName: patient?.name || 'Paciente',
       procedures: procedures.filter(p => p.name).map(p => p.name),
       totalValue: totalPrice,
-      paymentMethod: paymentMethodName,
+      paymentMethod: finalPaymentMethod,
       status: 'pendente',
       createdAt: new Date().toISOString(),
       dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 10 dias
@@ -105,22 +110,43 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
     
     toast({
       title: "Orçamento criado!",
-      description: `Orçamento para ${patient?.name} no valor de R$ ${totalPrice.toFixed(2)} foi criado e está disponível na seção Orçamentos.`,
+      description: `Orçamento para ${patient?.name} no valor de R$ ${totalPrice.toFixed(2)} foi criado.`,
     });
     
     // Resetar formulário
     setProcedures([{ id: 1, name: '', teeth: [], price: 0 }]);
     setPaymentMethod('');
+    setInstallments(1);
     setSelectedTeethForProcedure(1);
     onClose();
   };
 
   const generatePDF = () => {
+    const paymentMethodName = paymentMethods.find(pm => pm.id === paymentMethod)?.name || paymentMethod;
+    const finalPaymentMethod = (paymentMethod === 'credit' || paymentMethod === 'debit') 
+      ? `${paymentMethodName} - ${installments}x`
+      : paymentMethodName;
+
+    const budgetData = {
+      id: Date.now(),
+      patientName: patient?.name || 'Paciente',
+      procedures: procedures.filter(p => p.name).map(p => p.name),
+      totalValue: totalPrice,
+      paymentMethod: finalPaymentMethod,
+      status: 'pendente',
+      createdAt: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    };
+
+    generateBudgetPDF(budgetData);
+    
     toast({
       title: "PDF Gerado",
       description: "O orçamento foi exportado para PDF com sucesso!",
     });
   };
+
+  const showInstallments = paymentMethod === 'credit' || paymentMethod === 'debit';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -249,6 +275,23 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, patie
               })}
             </div>
           </div>
+
+          {showInstallments && (
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Número de Parcelas</h4>
+              <select
+                value={installments}
+                onChange={(e) => setInstallments(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-gold"
+              >
+                {[1,2,3,4,5,6,7,8,9,10,11,12].map(num => (
+                  <option key={num} value={num}>
+                    {num}x de R$ {(totalPrice / num).toFixed(2)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           
           <div className="bg-dental-gold/10 p-4 rounded-lg">
             <div className="flex justify-between items-center">

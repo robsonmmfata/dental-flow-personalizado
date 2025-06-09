@@ -1,7 +1,7 @@
 
 // Utility para gerar PDFs
 export const generateExamPDF = (exam: any) => {
-  // Simulação de geração de PDF
+  // Gerar conteúdo do PDF do exame
   const pdfContent = `
 === RELATÓRIO DE EXAME ===
 
@@ -14,7 +14,7 @@ Observações:
 ${exam.observations || 'Nenhuma observação registrada.'}
 
 Arquivos:
-${exam.files.join(', ') || 'Nenhum arquivo anexado.'}
+${exam.files && exam.files.length > 0 ? exam.files.join(', ') : 'Nenhum arquivo anexado.'}
 
 ---
 DentalCare - Sistema de Gestão Odontológica
@@ -22,11 +22,11 @@ Gerado em: ${new Date().toLocaleString('pt-BR')}
   `;
 
   // Criar blob e fazer download
-  const blob = new Blob([pdfContent], { type: 'text/plain' });
+  const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `exame_${exam.patientName.replace(/\s+/g, '_')}_${exam.examType.replace(/\s+/g, '_')}.pdf`;
+  link.download = `exame_${exam.patientName.replace(/\s+/g, '_')}_${exam.examType.replace(/\s+/g, '_')}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -53,11 +53,40 @@ DentalCare - Sistema de Gestão Odontológica
 Gerado em: ${new Date().toLocaleString('pt-BR')}
   `;
 
-  const blob = new Blob([pdfContent], { type: 'text/plain' });
+  const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `orcamento_${budget.patientName.replace(/\s+/g, '_')}_${budget.id}.pdf`;
+  link.download = `orcamento_${budget.patientName.replace(/\s+/g, '_')}_${budget.id || Date.now()}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
+export const generatePatientPDF = (patient: any) => {
+  const pdfContent = `
+=== FICHA DO PACIENTE ===
+
+Nome: ${patient.name}
+Telefone: ${patient.phone}
+Email: ${patient.email}
+Data de Nascimento: ${patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('pt-BR') : 'Não informado'}
+Endereço: ${patient.address || 'Não informado'}
+
+Observações:
+${patient.observations || 'Nenhuma observação registrada.'}
+
+---
+DentalCare - Sistema de Gestão Odontológica
+Gerado em: ${new Date().toLocaleString('pt-BR')}
+  `;
+
+  const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `paciente_${patient.name.replace(/\s+/g, '_')}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
