@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/Auth/AuthProvider";
 import { AuthView } from "./components/Auth/AuthView";
 import { ErrorBoundary } from "./components/Global/ErrorBoundary";
+import { LoadingSpinner } from "./components/Global/LoadingSpinner";
 import { NotificationContainer } from "./stores/globalStore";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -19,8 +20,11 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-dental-cream to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dental-gold"></div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="text-gray-600 mt-4">Carregando...</p>
+        </div>
       </div>
     );
   }
