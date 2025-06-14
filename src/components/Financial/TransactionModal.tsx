@@ -41,7 +41,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
         value: parseFloat(formData.value),
         category: formData.category,
         date: formData.date,
-        status: 'confirmado'
+        status: 'confirmado',
+        appointmentmtr: 0, // Added to fix TS error: must be a number, required
       });
 
       console.log('Nova transação criada:', formData);

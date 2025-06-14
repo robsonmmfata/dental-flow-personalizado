@@ -83,7 +83,7 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
       await appointmentStore.updateAppointment(appointment.id, {
         patientName: selectedPatient?.name || '',
         patientId: formData.patientId,
-        doctorName: selectedDoctor?.name || '',
+        doctorName: [selectedDoctor?.name || ''], // Fix: ensure this is string[]
         doctorId: formData.doctorId,
         dentist: selectedDoctor?.name || '',
         date: formData.date,

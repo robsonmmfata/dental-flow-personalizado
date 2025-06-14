@@ -99,7 +99,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
       const newAppointment = await appointmentStore.addAppointment({
         patientName: selectedPatientData?.name || formData.patientName,
         patientId: formData.patientId,
-        doctorName: selectedDoctor?.name || '',
+        doctorName: [selectedDoctor?.name || ''], // Fix: must be string[]
         doctorId: formData.doctorId,
         dentist: selectedDoctor?.name || '',
         date: formData.date,
