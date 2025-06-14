@@ -20,7 +20,7 @@ class DoctorStore {
     if (error) {
       throw error;
     }
-    return data || [];
+    return (data || []).map(this.mapDbToDoctor);
   }
 
   async getActiveDoctors(): Promise<Doctor[]> {
@@ -31,7 +31,7 @@ class DoctorStore {
     if (error) {
       throw error;
     }
-    return data || [];
+    return (data || []).map(this.mapDbToDoctor);
   }
 
   async addDoctor(doctorData: Omit<Doctor, 'id' | 'createdAt'>): Promise<Doctor> {
@@ -43,7 +43,7 @@ class DoctorStore {
     if (error) {
       throw error;
     }
-    return data;
+    return this.mapDbToDoctor(data);
   }
 
   async updateDoctor(id: number, updates: Partial<Doctor>): Promise<Doctor | null> {
@@ -56,7 +56,7 @@ class DoctorStore {
     if (error) {
       throw error;
     }
-    return data;
+    return this.mapDbToDoctor(data);
   }
 
   async deleteDoctor(id: number): Promise<boolean> {
@@ -79,7 +79,20 @@ class DoctorStore {
     if (error) {
       throw error;
     }
-    return data;
+    return this.mapDbToDoctor(data);
+  }
+
+  private mapDbToDoctor(dbRow: any): Doctor {
+    return {
+      id: dbRow.id,
+      name: dbRow.name,
+      cro: dbRow.cro,
+      specialty: dbRow.specialty,
+      email: dbRow.email,
+      phone: dbRow.phone,
+      status: dbRow.status,
+      createdAt: dbRow.createdat,
+    };
   }
 }
 
