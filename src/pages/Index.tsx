@@ -12,7 +12,7 @@ import { UsersView } from '@/components/Users/UsersView';
 import { ProfileView } from '@/components/Profile/ProfileView';
 import { SettingsView } from '@/components/Settings/SettingsView';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
-import { Wifi, WifiOff } from 'lucide-react';
+// Removido import do Wifi e WifiOff
 
 interface IndexProps {
   onLogout: () => void;
@@ -20,7 +20,7 @@ interface IndexProps {
 
 const Index: React.FC<IndexProps> = ({ onLogout }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
-  const { isConnected } = useRealtimeData();
+  useRealtimeData(); // Mantém para manter funcionalidade em tempo real, mesmo sem o indicador
 
   const renderContent = () => {
     switch (activeSection) {
@@ -57,26 +57,7 @@ const Index: React.FC<IndexProps> = ({ onLogout }) => {
         onLogout={onLogout}
       />
       <div className="flex-1 overflow-auto">
-        {/* Indicador de conexão em tempo real */}
-        <div className="fixed top-4 right-4 z-50">
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
-            isConnected 
-              ? 'bg-green-100 text-green-800 border border-green-200' 
-              : 'bg-red-100 text-red-800 border border-red-200'
-          }`}>
-            {isConnected ? (
-              <>
-                <Wifi size={16} />
-                Conectado
-              </>
-            ) : (
-              <>
-                <WifiOff size={16} />
-                Desconectado
-              </>
-            )}
-          </div>
-        </div>
+        {/* Removido indicador de conexão em tempo real */}
         {renderContent()}
       </div>
     </div>
