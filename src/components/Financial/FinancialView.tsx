@@ -56,6 +56,8 @@ export const FinancialView: React.FC = () => {
     enabled: selectedPeriod === 'month' && transactions.length > 0,
   });
 
+  const currentStats = selectedPeriod === 'day' ? todayStats : monthStats;
+
   const handleTransactionSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['transactions'] });
     queryClient.invalidateQueries({ queryKey: ['financialStats', today] });
