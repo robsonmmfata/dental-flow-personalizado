@@ -1,4 +1,3 @@
-
 import { supabase } from '../lib/supabaseClient';
 
 export interface Patient {
@@ -131,7 +130,7 @@ class PatientStore {
 
   async deletePatient(id: number): Promise<boolean> {
     const { error } = await supabase
-      .from<Patient>('patients')
+      .from('patients')
       .delete()
       .eq('id', id);
     if (error) {

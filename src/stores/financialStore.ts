@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabaseClient';
 
 export interface Transaction {
@@ -10,18 +11,18 @@ export interface Transaction {
   status: 'confirmado' | 'pendente';
   patientId?: number;
   appointmentmtr?: number;
-  createdat: string; // ALTERADO: Renomeado de 'createdAt' para 'createdat' (minúsculo)
+  createdat: string;
 }
 
 class FinancialStore {
   async addTransaction(transactionData: Omit<Transaction, 'id' | 'createdat'>): Promise<Transaction> {
     const { data, error } = await supabase
-      .from<Transaction>('transactions')
+      .from('transactions')
       .insert([{ ...transactionData, createdat: new Date().toISOString() }])
       .select()
       .single();
     if (error) {
-      console.error('Erro ao adicionar transação:', error); // Adicionei um log de erro aqui para depuração
+      console.error('Erro ao adicionar transação:', error);
       throw error;
     }
     return data;
@@ -42,10 +43,10 @@ class FinancialStore {
 
   async getAllTransactions(): Promise<Transaction[]> {
     const { data, error } = await supabase
-      .from<Transaction>('transactions')
+      .from('transactions')
       .select('*');
     if (error) {
-      console.error('Erro ao buscar todas as transações:', error); // Adicionei um log de erro
+      console.error('Erro ao buscar todas as transações:', error);
       throw error;
     }
     return data || [];
@@ -53,11 +54,11 @@ class FinancialStore {
 
   async getTransactionsByDate(date: string): Promise<Transaction[]> {
     const { data, error } = await supabase
-      .from<Transaction>('transactions')
+      .from('transactions')
       .select('*')
       .eq('date', date);
     if (error) {
-      console.error(`Erro ao buscar transações pela data ${date}:`, error); // Adicionei um log de erro
+      console.error(`Erro ao buscar transações pela data ${date}:`, error);
       throw error;
     }
     return data || [];
@@ -65,13 +66,13 @@ class FinancialStore {
 
   async getRevenueByDate(date: string): Promise<number> {
     const { data, error } = await supabase
-      .from<Transaction>('transactions')
+      .from('transactions')
       .select('value')
       .eq('date', date)
       .eq('type', 'receita')
       .eq('status', 'confirmado');
     if (error) {
-      console.error(`Erro ao buscar receita pela data ${date}:`, error); // Adicionei um log de erro
+      console.error(`Erro ao buscar receita pela data ${date}:`, error);
       throw error;
     }
     return data?.reduce((sum, t) => sum + t.value, 0) || 0;
@@ -79,13 +80,13 @@ class FinancialStore {
 
   async getExpensesByDate(date: string): Promise<number> {
     const { data, error } = await supabase
-      .from<Transaction>('transactions')
+      .from('transactions')
       .select('value')
       .eq('date', date)
       .eq('type', 'despesa')
       .eq('status', 'confirmado');
     if (error) {
-      console.error(`Erro ao buscar despesas pela data ${date}:`, error); // Adicionei um log de erro
+      console.error(`Erro ao buscar despesas pela data ${date}:`, error);
       throw error;
     }
     return data?.reduce((sum, t) => sum + t.value, 0) || 0;
@@ -98,24 +99,21 @@ class FinancialStore {
   }
 
   subscribe(listener: () => void): () => void {
-    // React Query or other mechanism should be used instead of listeners
-    // This method can be deprecated or adapted as needed
     return () => {};
   }
 
   private notifyListeners(): void {
-    // Deprecated with React Query
   }
 
   async updateTransaction(id: number, updates: Partial<Transaction>): Promise<Transaction | null> {
     const { data, error } = await supabase
-      .from<Transaction>('transactions')
+      .from('transactions')
       .update(updates)
       .eq('id', id)
       .select()
       .single();
     if (error) {
-      console.error(`Erro ao atualizar transação ${id}:`, error); // Adicionei um log de erro
+      console.error(`Erro ao atualizar transação ${id}:`, error);
       throw error;
     }
     return data;
@@ -123,11 +121,11 @@ class FinancialStore {
 
   async deleteTransaction(id: number): Promise<boolean> {
     const { error } = await supabase
-      .from<Transaction>('transactions')
+      .from('transactions')
       .delete()
       .eq('id', id);
     if (error) {
-      console.error(`Erro ao deletar transação ${id}:`, error); // Adicionei um log de erro
+      console.error(`Erro ao deletar transação ${id}:`, error);
       throw error;
     }
     return true;
@@ -135,4 +133,3 @@ class FinancialStore {
 }
 
 export const financialStore = new FinancialStore();
-export type { Transaction };

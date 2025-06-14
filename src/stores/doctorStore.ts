@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabaseClient';
 
 export interface Doctor {
@@ -14,7 +15,7 @@ export interface Doctor {
 class DoctorStore {
   async getAllDoctors(): Promise<Doctor[]> {
     const { data, error } = await supabase
-      .from<Doctor, Doctor>('doctors')
+      .from('doctors')
       .select('*');
     if (error) {
       throw error;
@@ -24,7 +25,7 @@ class DoctorStore {
 
   async getActiveDoctors(): Promise<Doctor[]> {
     const { data, error } = await supabase
-      .from<Doctor, Doctor>('doctors')
+      .from('doctors')
       .select('*')
       .eq('status', 'ativo');
     if (error) {
@@ -35,7 +36,7 @@ class DoctorStore {
 
   async addDoctor(doctorData: Omit<Doctor, 'id' | 'createdAt'>): Promise<Doctor> {
     const { data, error } = await supabase
-      .from<Doctor, Doctor>('doctors')
+      .from('doctors')
       .insert([{ ...doctorData, createdat: new Date().toISOString() }])
       .select()
       .single();
@@ -47,7 +48,7 @@ class DoctorStore {
 
   async updateDoctor(id: number, updates: Partial<Doctor>): Promise<Doctor | null> {
     const { data, error } = await supabase
-      .from<Doctor, Doctor>('doctors')
+      .from('doctors')
       .update(updates)
       .eq('id', id)
       .select('id, name, cro, specialty, email, phone, status, createdat')
@@ -60,7 +61,7 @@ class DoctorStore {
 
   async deleteDoctor(id: number): Promise<boolean> {
     const { error } = await supabase
-      .from<Doctor, Doctor>('doctors')
+      .from('doctors')
       .delete()
       .eq('id', id);
     if (error) {
@@ -71,7 +72,7 @@ class DoctorStore {
 
   async getDoctorById(id: number): Promise<Doctor | null> {
     const { data, error } = await supabase
-      .from<Doctor, Doctor>('doctors')
+      .from('doctors')
       .select('id, name, cro, specialty, email, phone, status, createdat')
       .eq('id', id)
       .single();

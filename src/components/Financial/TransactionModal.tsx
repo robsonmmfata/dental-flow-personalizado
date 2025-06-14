@@ -1,19 +1,21 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { financialStore } from '@/stores/financialStore';
 
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose }) => {
+export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    type: 'receita',
+    type: 'receita' as 'receita' | 'despesa',
     description: '',
     value: '',
     category: '',
@@ -28,19 +30,43 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     despesa: ['Materiais', 'Equipamentos', 'Energia', 'Água', 'Telefone', 'Salários', 'Outros']
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Nova transação:', formData);
-    toast({
-      title: "Transação registrada!",
-      description: `${formData.type === 'receita' ? 'Receita' : 'Despesa'} de R$ ${formData.value} foi adicionada`,
-    });
-    onClose();
-    setFormData({
-      type: 'receita', description: '', value: '', category: '',
-      date: new Date().toISOString().split('T')[0], paymentMethod: 'dinheiro',
-      patient: '', notes: ''
-    });
+    setIsLoading(true);
+
+    try {
+      await financialStore.addTransaction({
+        type: formData.type,
+        description: formData.description,
+        value: parseFloat(formData.value),
+        category: formData.category,
+        date: formData.date,
+        status: 'confirmado'
+      });
+
+      console.log('Nova transação criada:', formData);
+      toast({
+        title: "Transação registrada!",
+        description: `${formData.type === 'receita' ? 'Receita' : 'Despesa'} de R$ ${formData.value} foi adicionada`,
+      });
+      
+      onSuccess?.();
+      onClose();
+      setFormData({
+        type: 'receita', description: '', value: '', category: '',
+        date: new Date().toISOString().split('T')[0], paymentMethod: 'dinheiro',
+        patient: '', notes: ''
+      });
+    } catch (error) {
+      console.error('Erro ao criar transação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar a transação. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -130,7 +156,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
               required
             >
               <option value="">Selecione uma categoria</option>
-              {categories[formData.type as keyof typeof categories].map(cat => (
+              {categories[formData.type].map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -180,8 +206,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white">
-              Salvar
+            <Button 
+              type="submit" 
+              className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </form>

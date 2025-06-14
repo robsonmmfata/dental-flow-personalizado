@@ -5,45 +5,38 @@ import { StatsCard } from '../Dashboard/StatsCard';
 import { TransactionModal } from './TransactionModal';
 import { FilterModal } from './FilterModal';
 import { financialStore, Transaction } from '@/stores/financialStore';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const FinancialView: React.FC = () => {
+  const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState('day');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [todayStats, setTodayStats] = useState<{
-    revenue: number | null;
-    expenses: number | null;
-    profit: number | null;
-  }>({
-    revenue: null,
-    expenses: null,
-    profit: null
-  });
   
   const today = new Date().toISOString().split('T')[0];
 
-  useEffect(() => {
-    async function updateData() {
-      const allTransactions = await financialStore.getAllTransactions();
-      setTransactions(allTransactions);
-      
+  // Buscar transações
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => financialStore.getAllTransactions(),
+  });
+
+  // Buscar estatísticas do dia
+  const { data: todayStats } = useQuery({
+    queryKey: ['financialStats', today],
+    queryFn: async () => {
       const revenue = await financialStore.getRevenueByDate(today);
       const expenses = await financialStore.getExpensesByDate(today);
       const profit = await financialStore.getDailyProfit(today);
-      
-      setTodayStats({ revenue, expenses, profit });
-      console.log('Financeiro atualizado:', { revenue, expenses, profit });
-    }
+      return { revenue, expenses, profit };
+    },
+  });
 
-    updateData();
-    const unsubscribe = financialStore.subscribe(updateData);
-    
-    return unsubscribe;
-  }, [today]);
-
-  const handleTransactionAdded = () => {
-    // Os dados serão atualizados automaticamente através do subscription
+  const handleTransactionSuccess = () => {
+    // Atualizar dados após criar nova transação
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['financialStats', today] });
+    setShowTransactionModal(false);
   };
 
   return (
@@ -97,23 +90,23 @@ export const FinancialView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard
           title="Receita do Dia"
-          value={`R$ ${todayStats.revenue !== null ? todayStats.revenue.toFixed(2) : '0.00'}`}
+          value={`R$ ${todayStats?.revenue?.toFixed(2) || '0.00'}`}
           icon={TrendingUp}
           trend={{ value: 12.5, isPositive: true }}
           color="sage"
         />
         <StatsCard
           title="Despesa do Dia"
-          value={`R$ ${todayStats.expenses !== null ? todayStats.expenses.toFixed(2) : '0.00'}`}
+          value={`R$ ${todayStats?.expenses?.toFixed(2) || '0.00'}`}
           icon={TrendingDown}
           trend={{ value: 5.2, isPositive: false }}
           color="nude"
         />
         <StatsCard
           title="Lucro Líquido Diário"
-          value={`R$ ${todayStats.profit !== null ? todayStats.profit.toFixed(2) : '0.00'}`}
+          value={`R$ ${todayStats?.profit?.toFixed(2) || '0.00'}`}
           icon={DollarSign}
-          trend={{ value: 18.3, isPositive: todayStats.profit !== null && todayStats.profit > 0 }}
+          trend={{ value: 18.3, isPositive: (todayStats?.profit || 0) > 0 }}
           color="gold"
         />
       </div>
@@ -182,16 +175,16 @@ export const FinancialView: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Progresso</span>
-                  <span>{((todayStats.revenue / 650) * 100).toFixed(1)}%</span>
+                  <span>{(((todayStats?.revenue || 0) / 650) * 100).toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div 
                     className="bg-dental-gold h-3 rounded-full" 
-                    style={{ width: `${Math.min((todayStats.revenue / 650) * 100, 100)}%` }}
+                    style={{ width: `${Math.min(((todayStats?.revenue || 0) / 650) * 100, 100)}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-gray-500">
-                  {todayStats.revenue >= 650 ? 'Meta diária atingida!' : 'Continue trabalhando para atingir a meta'}
+                  {(todayStats?.revenue || 0) >= 650 ? 'Meta diária atingida!' : 'Continue trabalhando para atingir a meta'}
                 </div>
               </div>
             </div>
@@ -226,7 +219,7 @@ export const FinancialView: React.FC = () => {
       <TransactionModal 
         isOpen={showTransactionModal} 
         onClose={() => setShowTransactionModal(false)}
-        onTransactionAdded={handleTransactionAdded}
+        onSuccess={handleTransactionSuccess}
       />
       
       <FilterModal 
