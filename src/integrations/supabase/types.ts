@@ -162,6 +162,39 @@ export type Database = {
         }
         Relationships: []
       }
+      exams: {
+        Row: {
+          created_at: string | null
+          exam_date: string
+          exam_type: string
+          files: string[]
+          id: number
+          observations: string | null
+          patient_name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          exam_date?: string
+          exam_type: string
+          files?: string[]
+          id?: number
+          observations?: string | null
+          patient_name: string
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          exam_date?: string
+          exam_type?: string
+          files?: string[]
+          id?: number
+          observations?: string | null
+          patient_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           address: string | null

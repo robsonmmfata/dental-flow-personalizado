@@ -12,28 +12,26 @@ export interface Exam {
   observations?: string;
 }
 
-const tableName = "exams"; // ajuste o nome conforme necessário
-
 export function useExams() {
   return useQuery({
     queryKey: ['exams'],
     queryFn: async (): Promise<Exam[]> => {
       const { data, error } = await supabase
-        .from(tableName)
+        .from('exams')
         .select('*')
-        .order('date', { ascending: false });
+        .order('exam_date', { ascending: false });
 
       if (error) throw new Error(error.message);
 
-      // Faça adaptação dos dados conforme os campos na sua tabela
+      // Adapting keys for UI
       return (data || []).map((exam: any) => ({
         id: exam.id,
-        patientName: exam.patient_name || exam.patientName,
-        examType: exam.exam_type || exam.examType,
-        date: exam.exam_date || exam.date,
+        patientName: exam.patient_name,
+        examType: exam.exam_type,
+        date: exam.exam_date,
         status: exam.status,
         files: exam.files || [],
-        observations: exam.observations,
+        observations: exam.observations || '',
       }));
     },
   });
