@@ -8,7 +8,7 @@ interface GlobalState {
   notifications: Notification[];
   user: any;
   setLoading: (loading: boolean) => void;
-  addNotification: (notification: Omit<Notification, 'id'>) => void;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
   removeNotification: (id: string) => void;
   setUser: (user: any) => void;
   checkAuthStatus: () => Promise<void>;
@@ -29,7 +29,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
 
   setLoading: (loading: boolean) => set({ isLoading: loading }),
 
-  addNotification: (notification: Omit<Notification, 'id'>) => {
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => {
     const id = Date.now().toString();
     const newNotification = { ...notification, id, timestamp: new Date() };
     set(state => ({
