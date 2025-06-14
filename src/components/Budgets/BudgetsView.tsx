@@ -16,7 +16,7 @@ export const BudgetsView: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
 
-  // Helper: convert camelCase budget to snake_case for Supabase update
+  // Helper: convert camelCase Budget to snake_case for Supabase update
   const toSupabaseBudget = (budget: Partial<Budget>) => ({
     ...(budget.patientName !== undefined && { patientname: budget.patientName }),
     ...(budget.procedures !== undefined && { procedures: budget.procedures }),
@@ -27,7 +27,19 @@ export const BudgetsView: React.FC = () => {
     ...(budget.dueDate !== undefined && { duedate: budget.dueDate }),
   });
 
-  // Query budgets from Supabase, mapping to camelCase
+  // Helper: convert full Supabase row (snake_case) to camelCase Budget
+  const fromSupabaseBudget = (budget: Tables<"budgets">): Budget => ({
+    id: budget.id,
+    patientName: budget.patientname,
+    procedures: budget.procedures,
+    totalValue: budget.totalvalue,
+    paymentMethod: budget.paymentmethod ?? '',
+    status: (budget.status ?? 'pendente') as Budget['status'],
+    createdAt: budget.createdat,
+    dueDate: budget.duedate,
+  });
+
+  // Query budgets from Supabase, mapping to camelCase (Budget)
   const { data: budgets = [], isLoading } = useQuery({
     queryKey: ['budgets'],
     queryFn: async () => {
@@ -36,24 +48,15 @@ export const BudgetsView: React.FC = () => {
         .select('*')
         .order('createdat', { ascending: false });
       if (error) throw error;
-      // Map each record to camelCase to match Budget type
-      return (data ?? []).map((budget) => ({
-        id: budget.id,
-        patientName: budget.patientname,
-        procedures: budget.procedures,
-        totalValue: budget.totalvalue,
-        paymentMethod: budget.paymentmethod,
-        status: budget.status,
-        createdAt: budget.createdat,
-        dueDate: budget.duedate,
-      }));
+      // Map Supabase rows (snake_case) to camelCase Budget
+      return (data ?? []).map(fromSupabaseBudget);
     }
   });
 
   // Update budget status
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<Budget> }) => {
-      // Convert any updates to supabase format
+      // Convert camelCase updates to Supabase snake_case
       const updatesForSupabase = toSupabaseBudget(updates);
       const { data, error } = await supabase
         .from('budgets')
@@ -62,19 +65,7 @@ export const BudgetsView: React.FC = () => {
         .select()
         .maybeSingle();
       if (error) throw error;
-      // Map result back to camelCase if needed
-      return data
-        ? {
-            id: data.id,
-            patientName: data.patientname,
-            procedures: data.procedures,
-            totalValue: data.totalvalue,
-            paymentMethod: data.paymentmethod,
-            status: data.status,
-            createdAt: data.createdat,
-            dueDate: data.duedate,
-          }
-        : null;
+      return data ? fromSupabaseBudget(data) : null;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['budgets'] })
   });
