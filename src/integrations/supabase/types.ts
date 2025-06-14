@@ -258,6 +258,69 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          auto_backup: boolean
+          backup_frequency: string
+          backup_retention: string
+          clinic_address: string
+          clinic_email: string
+          clinic_name: string
+          clinic_phone: string
+          date_format: string
+          id: number
+          language: string
+          notifications_email: boolean
+          notifications_push: boolean
+          notifications_reminders: boolean
+          notifications_sms: boolean
+          theme: string
+          working_days: string[]
+          working_hours_end: string
+          working_hours_start: string
+        }
+        Insert: {
+          auto_backup?: boolean
+          backup_frequency?: string
+          backup_retention?: string
+          clinic_address: string
+          clinic_email: string
+          clinic_name: string
+          clinic_phone: string
+          date_format?: string
+          id?: number
+          language?: string
+          notifications_email?: boolean
+          notifications_push?: boolean
+          notifications_reminders?: boolean
+          notifications_sms?: boolean
+          theme?: string
+          working_days: string[]
+          working_hours_end: string
+          working_hours_start: string
+        }
+        Update: {
+          auto_backup?: boolean
+          backup_frequency?: string
+          backup_retention?: string
+          clinic_address?: string
+          clinic_email?: string
+          clinic_name?: string
+          clinic_phone?: string
+          date_format?: string
+          id?: number
+          language?: string
+          notifications_email?: boolean
+          notifications_push?: boolean
+          notifications_reminders?: boolean
+          notifications_sms?: boolean
+          theme?: string
+          working_days?: string[]
+          working_hours_end?: string
+          working_hours_start?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           appointmentmtr: number
