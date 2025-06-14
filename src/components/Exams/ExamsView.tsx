@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { FileImage, Plus, Eye, Download, Upload, Calendar, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UploadExamModal } from './UploadExamModal';
 import { ViewExamModal } from './ViewExamModal';
 import { useToast } from '@/hooks/use-toast';
+import { useExams } from '@/hooks/useExams';
 
 interface Exam {
   id: number;
@@ -23,38 +23,12 @@ export const ExamsView: React.FC = () => {
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const exams: Exam[] = [
-    {
-      id: 1,
-      patientName: 'Maria Silva',
-      examType: 'Radiografia Panorâmica',
-      date: '2024-01-15',
-      status: 'concluido',
-      files: ['radiografia_maria_01.jpg'],
-      observations: 'Exame normal, sem alterações significativas.'
-    },
-    {
-      id: 2,
-      patientName: 'João Santos',
-      examType: 'Tomografia',
-      date: '2024-01-14',
-      status: 'pendente',
-      files: [],
-      observations: 'Aguardando resultado do laboratório.'
-    },
-    {
-      id: 3,
-      patientName: 'Ana Costa',
-      examType: 'Radiografia Periapical',
-      date: '2024-01-13',
-      status: 'concluido',
-      files: ['radiografia_ana_01.jpg', 'radiografia_ana_02.jpg']
-    }
-  ];
+  // Pega os exames do Supabase usando o hook
+  const { data: exams = [], isLoading, isError, error } = useExams();
 
-  const filteredExams = exams.filter(exam =>
-    exam.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    exam.examType.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredExams = (exams || []).filter(exam =>
+    (exam?.patientName ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (exam?.examType ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleViewExam = (exam: Exam) => {
@@ -140,66 +114,76 @@ export const ExamsView: React.FC = () => {
         </div>
         
         <div className="p-6">
-          <div className="space-y-4">
-            {filteredExams.map((exam) => (
-              <div key={exam.id} className="border border-gray-200 rounded-lg p-4 hover:bg-dental-cream/30 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-dental-gold/20 rounded-full flex items-center justify-center">
-                      <FileImage size={20} className="text-dental-gold" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{exam.examType}</div>
-                      <div className="text-sm text-gray-600 flex items-center gap-1">
-                        <User size={14} />
-                        {exam.patientName}
+          {isLoading && (
+            <div className="text-center py-12 text-gray-500">Carregando exames...</div>
+          )}
+          {isError && (
+            <div className="text-center py-12 text-red-500">
+              Erro ao carregar exames: {error?.message || 'desconhecido'}
+            </div>
+          )}
+          {!isLoading && !isError && (
+            <div className="space-y-4">
+              {filteredExams.map((exam) => (
+                <div key={exam.id} className="border border-gray-200 rounded-lg p-4 hover:bg-dental-cream/30 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-dental-gold/20 rounded-full flex items-center justify-center">
+                        <FileImage size={20} className="text-dental-gold" />
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {new Date(exam.date).toLocaleDateString('pt-BR')}
+                      <div>
+                        <div className="font-medium text-gray-900">{exam.examType}</div>
+                        <div className="text-sm text-gray-600 flex items-center gap-1">
+                          <User size={14} />
+                          {exam.patientName}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {new Date(exam.date).toLocaleDateString('pt-BR')}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-6">
-                    <div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        exam.status === 'concluido' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {exam.status === 'concluido' ? 'Concluído' : 'Pendente'}
-                      </span>
                     </div>
                     
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleViewExam(exam)}
-                        className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
-                      >
-                        <Eye size={14} className="mr-1" />
-                        Visualizar
-                      </Button>
-                      {exam.status === 'concluido' && exam.files.length > 0 && (
+                    <div className="flex items-center gap-6">
+                      <div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          exam.status === 'concluido' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {exam.status === 'concluido' ? 'Concluído' : 'Pendente'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-2">
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => handleDownloadExam(exam.id)}
-                          className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+                          onClick={() => handleViewExam(exam)}
+                          className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
                         >
-                          <Download size={14} className="mr-1" />
-                          Download
+                          <Eye size={14} className="mr-1" />
+                          Visualizar
                         </Button>
-                      )}
+                        {exam.status === 'concluido' && exam.files.length > 0 && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleDownloadExam(exam.id)}
+                            className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+                          >
+                            <Download size={14} className="mr-1" />
+                            Download
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           
-          {filteredExams.length === 0 && (
+          {!isLoading && !isError && filteredExams.length === 0 && (
             <div className="text-center py-12">
               <FileImage size={48} className="mx-auto text-gray-300 mb-4" />
               <p className="text-gray-500">
