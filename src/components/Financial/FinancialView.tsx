@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { StatsCard } from '../Dashboard/StatsCard';
 import { TransactionModal } from './TransactionModal';
 import { FilterModal } from './FilterModal';
-import { MonthlyGoalModal } from './MonthlyGoalModal';
+import { GoalModal } from './MonthlyGoalModal';
 import { financialStore } from '@/stores/financialStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -14,7 +14,9 @@ export const FinancialView: React.FC = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showMonthlyGoalModal, setShowMonthlyGoalModal] = useState(false);
-  const [monthlyGoal, setMonthlyGoal] = useState<number>(15000); // valor inicial, pode ser alterado pelo usuário
+  const [showDailyGoalModal, setShowDailyGoalModal] = useState(false);
+  const [monthlyGoal, setMonthlyGoal] = useState<number>(15000);
+  const [dailyGoal, setDailyGoal] = useState<number>(650);
 
   const today = new Date().toISOString().split('T')[0];
   const currentYear = new Date().getFullYear();
@@ -60,14 +62,10 @@ export const FinancialView: React.FC = () => {
     setShowTransactionModal(false);
   };
 
-  // Novo: abrir o modal ao invés do prompt
-  const handleSetMonthlyGoal = () => {
-    setShowMonthlyGoalModal(true);
-  };
+  const handleSetMonthlyGoal = () => setShowMonthlyGoalModal(true);
+  const handleSetDailyGoal = () => setShowDailyGoalModal(true);
 
-  // Get progress
-  const currentStats = selectedPeriod === 'day' ? todayStats : monthStats;
-  const goal = selectedPeriod === 'day' ? 650 : monthlyGoal;
+  const goal = selectedPeriod === 'day' ? dailyGoal : monthlyGoal;
   const goalLabel = selectedPeriod === 'day' ? 'Meta de receita diária' : 'Meta de receita mensal';
   const progress = ((currentStats?.revenue || 0) / goal) * 100;
 
@@ -117,6 +115,14 @@ export const FinancialView: React.FC = () => {
           >
             <Plus size={16} className="mr-2" />
             Nova Transação
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleSetDailyGoal}
+            className="border-blue-500 text-blue-600 hover:bg-blue-50"
+            data-testid="botao-meta-diaria"
+          >
+            Definir Meta Diária
           </Button>
           <Button
             variant="outline"
@@ -283,11 +289,21 @@ export const FinancialView: React.FC = () => {
         isOpen={showFilterModal}
         onClose={() => setShowFilterModal(false)}
       />
-      <MonthlyGoalModal
+      <GoalModal
         isOpen={showMonthlyGoalModal}
         initialGoal={monthlyGoal}
         onClose={() => setShowMonthlyGoalModal(false)}
         onSave={goal => setMonthlyGoal(goal)}
+        title="Definir Meta Mensal de Receita"
+        label="Valor da meta mensal (R$)"
+      />
+      <GoalModal
+        isOpen={showDailyGoalModal}
+        initialGoal={dailyGoal}
+        onClose={() => setShowDailyGoalModal(false)}
+        onSave={goal => setDailyGoal(goal)}
+        title="Definir Meta Diária de Receita"
+        label="Valor da meta diária (R$)"
       />
     </div>
   );

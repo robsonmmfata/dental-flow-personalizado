@@ -1,23 +1,32 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-interface MonthlyGoalModalProps {
+interface GoalModalProps {
   isOpen: boolean;
   initialGoal: number;
   onClose: () => void;
   onSave: (goal: number) => void;
+  title: string;
+  label: string;
 }
 
-export const MonthlyGoalModal: React.FC<MonthlyGoalModalProps> = ({
+export const GoalModal: React.FC<GoalModalProps> = ({
   isOpen,
   initialGoal,
   onClose,
   onSave,
+  title,
+  label,
 }) => {
   const [goalInput, setGoalInput] = useState(initialGoal.toFixed(2));
+
+  // Atualiza valor do input ao abrir com novo initialGoal
+  useEffect(() => {
+    setGoalInput(initialGoal.toFixed(2));
+  }, [initialGoal, isOpen]);
 
   const handleSave = () => {
     const cleanValue = parseFloat(goalInput.replace(',', '.'));
@@ -31,14 +40,14 @@ export const MonthlyGoalModal: React.FC<MonthlyGoalModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Definir Meta Mensal de Receita</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div>
-          <label htmlFor="monthly-goal" className="block mb-2 text-sm">
-            Valor da meta mensal (R$)
+          <label htmlFor="goal-value" className="block mb-2 text-sm">
+            {label}
           </label>
           <Input
-            id="monthly-goal"
+            id="goal-value"
             type="number"
             min={0}
             value={goalInput}
