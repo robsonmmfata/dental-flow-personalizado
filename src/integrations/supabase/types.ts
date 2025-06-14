@@ -129,6 +129,33 @@ export type Database = {
         }
         Relationships: []
       }
+      device_push_tokens: {
+        Row: {
+          created_at: string | null
+          id: number
+          last_used_at: string | null
+          platform: string | null
+          token: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          last_used_at?: string | null
+          platform?: string | null
+          token: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          last_used_at?: string | null
+          platform?: string | null
+          token?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       doctors: {
         Row: {
           createdat: string
