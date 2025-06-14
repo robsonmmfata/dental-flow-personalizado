@@ -1,34 +1,66 @@
 
-import React, { useState, useEffect } from 'react';
-import { FileText, Edit, Check, Clock, DollarSign, Eye, Filter } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileText, Edit, Check, Clock, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { EditBudgetModal } from './EditBudgetModal';
-import { budgetStore, Budget } from '@/stores/budgetStore';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Budget = Tables<"budgets">;
 
 export const BudgetsView: React.FC = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<string>('todos');
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
 
-  useEffect(() => {
-    // Carregar orçamentos do store
-    setBudgets(budgetStore.getAllBudgets());
-  }, []);
+  // Query budgets from Supabase
+  const { data: budgets = [], isLoading } = useQuery({
+    queryKey: ['budgets'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .order('createdat', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    }
+  });
+
+  // Update budget status
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Budget> }) => {
+      const { data, error } = await supabase
+        .from('budgets')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['budgets'] })
+  });
 
   const filteredBudgets = budgets.filter(budget => 
     selectedStatus === 'todos' || budget.status === selectedStatus
   );
 
-  const handleConfirmPayment = (budgetId: number) => {
-    const updatedBudget = budgetStore.updateBudget(budgetId, { status: 'pago' });
-    if (updatedBudget) {
-      setBudgets(budgetStore.getAllBudgets());
+  const handleConfirmPayment = async (budgetId: number) => {
+    try {
+      await updateMutation.mutateAsync({ id: budgetId, updates: { status: 'pago' } });
       toast({
         title: "Pagamento confirmado!",
         description: "O orçamento foi marcado como pago e adicionado às transações.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Erro ao confirmar pagamento",
+        description: err.message || "Tente novamente.",
+        variant: "destructive",
       });
     }
   };
@@ -39,12 +71,12 @@ export const BudgetsView: React.FC = () => {
   };
 
   const handleEditComplete = () => {
-    setBudgets(budgetStore.getAllBudgets());
+    queryClient.invalidateQueries({ queryKey: ['budgets'] });
     setShowEditModal(false);
     setSelectedBudget(null);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'pago': return 'bg-green-100 text-green-800';
       case 'pendente': return 'bg-yellow-100 text-yellow-800';
@@ -53,7 +85,7 @@ export const BudgetsView: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | null) => {
     switch (status) {
       case 'pago': return <Check size={16} className="text-green-600" />;
       case 'pendente': return <Clock size={16} className="text-yellow-600" />;
@@ -123,7 +155,7 @@ export const BudgetsView: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Valor Total Pendente</p>
               <p className="text-2xl font-bold text-dental-gold">
-                R$ {budgets.filter(b => b.status === 'pendente').reduce((sum, b) => sum + b.totalValue, 0).toFixed(2)}
+                R$ {budgets.filter(b => b.status === 'pendente').reduce((sum, b) => sum + (b.totalvalue||0), 0).toFixed(2)}
               </p>
             </div>
             <DollarSign size={24} className="text-dental-gold" />
@@ -152,6 +184,9 @@ export const BudgetsView: React.FC = () => {
         </div>
         
         <div className="p-6">
+          {isLoading && (
+            <div className="text-center text-gray-500">Carregando orçamentos...</div>
+          )}
           <div className="space-y-4">
             {filteredBudgets.map((budget) => (
               <div key={budget.id} className="border border-gray-200 rounded-lg p-4 hover:bg-dental-cream/30 transition-colors">
@@ -161,13 +196,13 @@ export const BudgetsView: React.FC = () => {
                       <FileText size={20} className="text-dental-gold" />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">#{budget.id} - {budget.patientName}</div>
+                      <div className="font-medium text-gray-900">#{budget.id} - {budget.patientname}</div>
                       <div className="text-sm text-gray-600">
                         Procedimentos: {budget.procedures.join(', ')}
                       </div>
                       <div className="text-sm text-gray-600">
-                        Criado em: {new Date(budget.createdAt).toLocaleDateString('pt-BR')} • 
-                        Vencimento: {new Date(budget.dueDate).toLocaleDateString('pt-BR')}
+                        Criado em: {budget.createdat && (new Date(budget.createdat).toLocaleDateString('pt-BR'))} • 
+                        Vencimento: {budget.duedate && (new Date(budget.duedate).toLocaleDateString('pt-BR'))}
                       </div>
                     </div>
                   </div>
@@ -176,14 +211,14 @@ export const BudgetsView: React.FC = () => {
                     <div className="text-center">
                       <div className="text-xs text-gray-500">Valor Total</div>
                       <div className="font-bold text-dental-gold text-lg">
-                        R$ {budget.totalValue.toFixed(2)}
+                        R$ {(budget.totalvalue || 0).toFixed(2)}
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <div className="text-xs text-gray-500">Pagamento</div>
                       <div className="font-medium text-gray-900">
-                        {budget.paymentMethod}
+                        {budget.paymentmethod}
                       </div>
                     </div>
                     
@@ -210,6 +245,7 @@ export const BudgetsView: React.FC = () => {
                           size="sm" 
                           onClick={() => handleConfirmPayment(budget.id)}
                           className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+                          disabled={updateMutation.isPending}
                         >
                           <Check size={14} className="mr-1" />
                           Confirmar
@@ -222,7 +258,7 @@ export const BudgetsView: React.FC = () => {
             ))}
           </div>
           
-          {filteredBudgets.length === 0 && (
+          {filteredBudgets.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <FileText size={48} className="mx-auto text-gray-300 mb-4" />
               <p className="text-gray-500">Nenhum orçamento encontrado</p>
