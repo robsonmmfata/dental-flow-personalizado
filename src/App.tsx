@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,7 +8,7 @@ import { AuthProvider, useAuth } from "./components/Auth/AuthProvider";
 import { AuthView } from "./components/Auth/AuthView";
 import { ErrorBoundary } from "./components/Global/ErrorBoundary";
 import { LoadingSpinner } from "./components/Global/LoadingSpinner";
-import { NotificationContainer } from "./stores/globalStore";
+import NotificationContainer from "./components/Notifications/NotificationContainer";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
