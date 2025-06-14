@@ -1,27 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Plus, Filter, Calendar } from 'lucide-react';
+
+import React, { useState } from 'react';
+import { DollarSign, TrendingUp, TrendingDown, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '../Dashboard/StatsCard';
 import { TransactionModal } from './TransactionModal';
 import { FilterModal } from './FilterModal';
-import { financialStore, Transaction } from '@/stores/financialStore';
+import { financialStore } from '@/stores/financialStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const FinancialView: React.FC = () => {
   const queryClient = useQueryClient();
-  const [selectedPeriod, setSelectedPeriod] = useState('day');
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'month'>('day');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  
-  const today = new Date().toISOString().split('T')[0];
+  const [monthlyGoal, setMonthlyGoal] = useState<number>(15000); // valor inicial, pode ser alterado pelo usuário
 
-  // Buscar transações
+  const today = new Date().toISOString().split('T')[0];
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1; // 1-indexado
+  const currentMonthStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+
+  // Transações
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions'],
     queryFn: () => financialStore.getAllTransactions(),
   });
 
-  // Buscar estatísticas do dia
+  // Estatísticas do dia
   const { data: todayStats } = useQuery({
     queryKey: ['financialStats', today],
     queryFn: async () => {
@@ -32,81 +37,131 @@ export const FinancialView: React.FC = () => {
     },
   });
 
+  // Estatísticas do mês
+  const { data: monthStats } = useQuery({
+    queryKey: ['financialStatsMonth', currentMonthStr],
+    queryFn: async () => {
+      // Somar receitas/despesas de todas as transações do mês
+      const monthTransactions = transactions.filter((t) =>
+        t.date.startsWith(currentMonthStr)
+      );
+      const revenue = monthTransactions.filter(t => t.type === 'receita' && t.status === 'confirmado').reduce((s, t) => s + t.value, 0);
+      const expenses = monthTransactions.filter(t => t.type === 'despesa' && t.status === 'confirmado').reduce((s, t) => s + t.value, 0);
+      const profit = revenue - expenses;
+      return { revenue, expenses, profit };
+    },
+    enabled: selectedPeriod === 'month' && transactions.length > 0,
+  });
+
   const handleTransactionSuccess = () => {
-    // Atualizar dados após criar nova transação
     queryClient.invalidateQueries({ queryKey: ['transactions'] });
     queryClient.invalidateQueries({ queryKey: ['financialStats', today] });
     setShowTransactionModal(false);
   };
 
+  // Abrir um prompt para definir meta mensal (pode ser substituído por modal customizado depois)
+  const handleSetMonthlyGoal = () => {
+    const goalStr = window.prompt('Defina o valor da meta mensal (R$):', monthlyGoal?.toString() || '15000');
+    if (!goalStr) return;
+    const valueNum = parseFloat(goalStr.replace(',', '.'));
+    if (!isNaN(valueNum) && valueNum > 0) {
+      setMonthlyGoal(valueNum);
+    }
+  };
+
+  // Get progress
+  const currentStats = selectedPeriod === 'day' ? todayStats : monthStats;
+  const goal = selectedPeriod === 'day' ? 650 : monthlyGoal;
+  const goalLabel = selectedPeriod === 'day' ? 'Meta de receita diária' : 'Meta de receita mensal';
+  const progress = ((currentStats?.revenue || 0) / goal) * 100;
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Controle Financeiro</h1>
           <p className="text-gray-600 mt-1">Gerencie receitas, despesas e relatórios</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setSelectedPeriod('day')}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                selectedPeriod === 'day' 
-                  ? 'bg-dental-gold text-white' 
+                selectedPeriod === 'day'
+                  ? 'bg-dental-gold text-white'
                   : 'text-gray-600 hover:text-dental-gold'
               }`}
+              data-testid="toggle-dia"
             >
               Dia
             </button>
             <button
               onClick={() => setSelectedPeriod('month')}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                selectedPeriod === 'month' 
-                  ? 'bg-dental-gold text-white' 
+                selectedPeriod === 'month'
+                  ? 'bg-dental-gold text-white'
                   : 'text-gray-600 hover:text-dental-gold'
               }`}
+              data-testid="toggle-mes"
             >
               Mês
             </button>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setShowFilterModal(true)}
             className="border-dental-gold text-dental-gold hover:bg-dental-gold hover:text-white"
           >
             <Filter size={16} className="mr-2" />
             Filtros
           </Button>
-          <Button 
+          <Button
             onClick={() => setShowTransactionModal(true)}
             className="bg-dental-gold hover:bg-dental-gold-dark text-white"
           >
             <Plus size={16} className="mr-2" />
             Nova Transação
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleSetMonthlyGoal}
+            className="border-blue-500 text-blue-600 hover:bg-blue-50"
+            data-testid="botao-meta-mensal"
+          >
+            Definir Meta Mensal
+          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard
-          title="Receita do Dia"
-          value={`R$ ${todayStats?.revenue?.toFixed(2) || '0.00'}`}
+          title={selectedPeriod === 'day' ? 'Receita do Dia' : 'Receita do Mês'}
+          value={`R$ ${currentStats?.revenue?.toFixed(2) || '0.00'}`}
           icon={TrendingUp}
-          trend={{ value: 12.5, isPositive: true }}
+          trend={{
+            value: selectedPeriod === 'day' ? 12.5 : 5.2,
+            isPositive: true
+          }}
           color="sage"
         />
         <StatsCard
-          title="Despesa do Dia"
-          value={`R$ ${todayStats?.expenses?.toFixed(2) || '0.00'}`}
+          title={selectedPeriod === 'day' ? 'Despesa do Dia' : 'Despesa do Mês'}
+          value={`R$ ${currentStats?.expenses?.toFixed(2) || '0.00'}`}
           icon={TrendingDown}
-          trend={{ value: 5.2, isPositive: false }}
+          trend={{
+            value: selectedPeriod === 'day' ? 5.2 : 2.4,
+            isPositive: false
+          }}
           color="nude"
         />
         <StatsCard
-          title="Lucro Líquido Diário"
-          value={`R$ ${todayStats?.profit?.toFixed(2) || '0.00'}`}
+          title={selectedPeriod === 'day' ? 'Lucro Líquido Diário' : 'Lucro Líquido Mensal'}
+          value={`R$ ${currentStats?.profit?.toFixed(2) || '0.00'}`}
           icon={DollarSign}
-          trend={{ value: 18.3, isPositive: (todayStats?.profit || 0) > 0 }}
+          trend={{
+            value: selectedPeriod === 'day' ? 18.3 : 7.8,
+            isPositive: (currentStats?.profit || 0) > 0
+          }}
           color="gold"
         />
       </div>
@@ -123,7 +178,6 @@ export const FinancialView: React.FC = () => {
                 </span>
               </h3>
             </div>
-            
             <div className="p-6">
               <div className="space-y-4">
                 {transactions.slice(0, 10).map((transaction) => (
@@ -152,7 +206,6 @@ export const FinancialView: React.FC = () => {
                   </div>
                 ))}
               </div>
-              
               {transactions.length === 0 && (
                 <div className="text-center py-12">
                   <DollarSign size={48} className="mx-auto text-gray-300 mb-4" />
@@ -165,26 +218,35 @@ export const FinancialView: React.FC = () => {
 
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Meta Diária</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">
+                {selectedPeriod === 'day' ? 'Meta Diária' : 'Meta Mensal'}
+              </h3>
+            </div>
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-dental-gold">R$ 650</div>
-                <div className="text-sm text-gray-600">Meta de receita diária</div>
+                <div className="text-2xl font-bold text-dental-gold">R$ {goal}</div>
+                <div className="text-sm text-gray-600">{goalLabel}</div>
               </div>
-              
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Progresso</span>
-                  <span>{(((todayStats?.revenue || 0) / 650) * 100).toFixed(1)}%</span>
+                  <span>{progress.toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-dental-gold h-3 rounded-full" 
-                    style={{ width: `${Math.min(((todayStats?.revenue || 0) / 650) * 100, 100)}%` }}
+                  <div
+                    className="bg-dental-gold h-3 rounded-full"
+                    style={{ width: `${Math.min(progress, 100)}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-gray-500">
-                  {(todayStats?.revenue || 0) >= 650 ? 'Meta diária atingida!' : 'Continue trabalhando para atingir a meta'}
+                  {(currentStats?.revenue || 0) >= goal
+                    ? selectedPeriod === 'day'
+                      ? 'Meta diária atingida!'
+                      : 'Meta mensal atingida!'
+                    : selectedPeriod === 'day'
+                    ? 'Continue trabalhando para atingir a meta diária'
+                    : 'Continue trabalhando para atingir a meta mensal'}
                 </div>
               </div>
             </div>
@@ -216,15 +278,14 @@ export const FinancialView: React.FC = () => {
         </div>
       </div>
 
-      <TransactionModal 
-        isOpen={showTransactionModal} 
+      <TransactionModal
+        isOpen={showTransactionModal}
         onClose={() => setShowTransactionModal(false)}
         onSuccess={handleTransactionSuccess}
       />
-      
-      <FilterModal 
-        isOpen={showFilterModal} 
-        onClose={() => setShowFilterModal(false)} 
+      <FilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
       />
     </div>
   );
