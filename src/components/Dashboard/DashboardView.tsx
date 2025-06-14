@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, DollarSign, Users, FileImage, TrendingDown } from 'lucide-react';
@@ -102,7 +101,6 @@ export const DashboardView: React.FC = () => {
         />
       </div>
 
-      {/* Mantido o restante do layout exemplo */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Próximas Consultas</h3>
@@ -118,7 +116,7 @@ export const DashboardView: React.FC = () => {
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   appointment.status === 'confirmado' ? 'bg-green-100 text-green-800' :
-                  appointment.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
+                  appointment.status === 'agendado' ? 'bg-yellow-100 text-yellow-800' :
                   'bg-blue-100 text-blue-800'
                 }`}>
                   {appointment.status}
