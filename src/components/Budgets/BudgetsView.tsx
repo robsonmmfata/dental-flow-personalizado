@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FileText, Edit, Check, Clock, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
-type Budget = Tables<"budgets">;
+type Budget = {
+  id: number;
+  patientName: string;
+  procedures: string[];
+  totalValue: number;
+  paymentMethod: string;
+  status: 'pendente' | 'pago' | 'vencido';
+  createdAt: string;
+  dueDate: string;
+};
 
 export const BudgetsView: React.FC = () => {
   const { toast } = useToast();
@@ -300,3 +310,4 @@ export const BudgetsView: React.FC = () => {
     </div>
   );
 };
+
