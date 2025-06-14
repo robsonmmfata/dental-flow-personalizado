@@ -13,17 +13,20 @@ interface NewAppointmentModalProps {
   onClose: () => void;
   selectedDate: Date;
   selectedPatient?: Patient | null;
+  onSuccess?: () => void;
 }
 
 export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({ 
   isOpen, 
   onClose, 
   selectedDate,
-  selectedPatient 
+  selectedPatient,
+  onSuccess 
 }) => {
   const { toast } = useToast();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     patientName: selectedPatient?.name || '',
@@ -38,12 +41,26 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
 
   useEffect(() => {
     async function fetchData() {
-      const doctorsData = await doctorStore.getActiveDoctors();
-      const patientsData = await patientStore.getActivePatients();
-      setDoctors(doctorsData);
-      setPatients(patientsData);
+      try {
+        const [doctorsData, patientsData] = await Promise.all([
+          doctorStore.getActiveDoctors(),
+          patientStore.getActivePatients()
+        ]);
+        setDoctors(doctorsData);
+        setPatients(patientsData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar dados dos médicos e pacientes",
+          variant: "destructive"
+        });
+      }
     }
-    fetchData();
+    
+    if (isOpen) {
+      fetchData();
+    }
     
     if (selectedPatient) {
       setFormData(prev => ({
@@ -52,7 +69,14 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
         patientId: selectedPatient.id
       }));
     }
-  }, [selectedPatient]);
+  }, [selectedPatient, isOpen, toast]);
+
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      date: selectedDate.toISOString().split('T')[0]
+    }));
+  }, [selectedDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,57 +90,70 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
       return;
     }
 
-    const selectedDoctor = doctors.find(d => d.id === formData.doctorId);
-    const selectedPatientData = patients.find(p => p.id === formData.patientId);
-    
-    const newAppointment = await appointmentStore.addAppointment({
-      patientName: selectedPatientData?.name || formData.patientName,
-      patientId: formData.patientId,
-      doctorName: selectedDoctor?.name || '',
-      doctorId: formData.doctorId,
-      dentist: selectedDoctor?.name || '',
-      date: formData.date,
-      time: formData.time,
-      service: formData.service,
-      notes: formData.notes,
-      status: 'agendado'
-    });
+    setIsLoading(true);
 
-    // Adicionar transação financeira se valor foi especificado
-    if (formData.serviceValue > 0) {
-      await financialStore.addAppointmentTransaction(
-        formData.patientName,
-        formData.service || 'Consulta',
-        formData.serviceValue,
-        formData.patientId,
-        newAppointment.id
-      );
+    try {
+      const selectedDoctor = doctors.find(d => d.id === formData.doctorId);
+      const selectedPatientData = patients.find(p => p.id === formData.patientId);
+      
+      const newAppointment = await appointmentStore.addAppointment({
+        patientName: selectedPatientData?.name || formData.patientName,
+        patientId: formData.patientId,
+        doctorName: selectedDoctor?.name || '',
+        doctorId: formData.doctorId,
+        dentist: selectedDoctor?.name || '',
+        date: formData.date,
+        time: formData.time,
+        service: formData.service,
+        notes: formData.notes,
+        status: 'agendado'
+      });
+
+      // Adicionar transação financeira se valor foi especificado
+      if (formData.serviceValue > 0) {
+        await financialStore.addAppointmentTransaction(
+          formData.patientName,
+          formData.service || 'Consulta',
+          formData.serviceValue,
+          formData.patientId,
+          newAppointment.id
+        );
+      }
+
+      // Atualizar paciente com última e próxima consulta
+      const today = new Date().toISOString().split('T')[0];
+      await patientStore.updatePatient(formData.patientId, {
+        lastVisit: today,
+        nextAppointment: formData.date
+      });
+
+      console.log('Nova consulta agendada:', newAppointment);
+      
+      toast({
+        title: "Consulta agendada!",
+        description: `Consulta para ${formData.patientName} foi agendada com sucesso`,
+      });
+      
+      // Reset form
+      setFormData({
+        patientName: '', patientId: 0, doctorId: 0,
+        date: selectedDate.toISOString().split('T')[0],
+        time: '', service: '', serviceValue: 0, notes: ''
+      });
+
+      onSuccess?.();
+      onClose();
+
+    } catch (error) {
+      console.error('Erro ao agendar consulta:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível agendar a consulta. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    // Atualizar paciente com última e próxima consulta
-    const today = new Date().toISOString().split('T')[0];
-    await patientStore.updatePatient(formData.patientId, {
-      lastVisit: today,
-      nextAppointment: formData.date
-    });
-
-    console.log('Nova consulta agendada:', newAppointment);
-    
-    toast({
-      title: "Consulta agendada!",
-      description: `Consulta para ${formData.patientName} foi agendada com sucesso`,
-    });
-    
-    onClose();
-    // Refresh patients list after scheduling
-    const refreshedPatients = await patientStore.getActivePatients();
-    setPatients(refreshedPatients);
-
-    setFormData({
-      patientName: '', patientId: 0, doctorId: 0,
-      date: selectedDate.toISOString().split('T')[0],
-      time: '', service: '', serviceValue: 0, notes: ''
-    });
   };
 
   return (
@@ -233,8 +270,12 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white">
-              Agendar Consulta
+            <Button 
+              type="submit" 
+              className="flex-1 bg-dental-gold hover:bg-dental-gold-dark text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Agendando...' : 'Agendar Consulta'}
             </Button>
           </div>
         </form>
