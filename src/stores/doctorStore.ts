@@ -55,7 +55,7 @@ class DoctorStore {
     if (error) {
       throw error;
     }
-    return this.mapDbToDoctor(data);
+    return data ? this.mapDbToDoctor(data) : null;
   }
 
   async deleteDoctor(id: number): Promise<boolean> {
@@ -78,7 +78,7 @@ class DoctorStore {
     if (error) {
       throw error;
     }
-    return this.mapDbToDoctor(data);
+    return data ? this.mapDbToDoctor(data) : null;
   }
 
   private mapDbToDoctor(dbRow: any): Doctor {

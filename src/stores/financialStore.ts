@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Transaction {
@@ -9,22 +10,40 @@ export interface Transaction {
   category: string;
   status: 'confirmado' | 'pendente';
   patientId?: number;
-  appointmentmtr?: number;
+  appointmentmtr: number;
   createdat: string;
+}
+
+function mapDbToTransaction(row: any): Transaction {
+  return {
+    id: row.id,
+    date: row.date,
+    description: row.description,
+    type: row.type,
+    value: row.value,
+    category: row.category,
+    status: row.status,
+    patientId: row.patientId,
+    appointmentmtr: row.appointmentmtr,
+    createdat: row.createdat,
+  }
 }
 
 class FinancialStore {
   async addTransaction(transactionData: Omit<Transaction, 'id' | 'createdat'>): Promise<Transaction> {
+    // appointmentmtr is required (use 0 if not provided)
+    const dataToInsert: any = { ...transactionData, createdat: new Date().toISOString() };
+    if (typeof dataToInsert.appointmentmtr !== 'number') dataToInsert.appointmentmtr = 0;
     const { data, error } = await supabase
       .from('transactions')
-      .insert([{ ...transactionData, createdat: new Date().toISOString() }])
+      .insert([dataToInsert])
       .select()
       .single();
     if (error) {
       console.error('Erro ao adicionar transação:', error);
       throw error;
     }
-    return data;
+    return mapDbToTransaction(data);
   }
 
   async addAppointmentTransaction(patientName: string, service: string, value: number, patientId?: number, appointmentmtr?: number): Promise<Transaction> {
@@ -36,7 +55,7 @@ class FinancialStore {
       category: 'Consultas',
       status: 'confirmado',
       patientId,
-      appointmentmtr
+      appointmentmtr: appointmentmtr ?? 0
     });
   }
 
@@ -48,7 +67,7 @@ class FinancialStore {
       console.error('Erro ao buscar todas as transações:', error);
       throw error;
     }
-    return data || [];
+    return (data || []).map(mapDbToTransaction);
   }
 
   async getTransactionsByDate(date: string): Promise<Transaction[]> {
@@ -60,7 +79,7 @@ class FinancialStore {
       console.error(`Erro ao buscar transações pela data ${date}:`, error);
       throw error;
     }
-    return data || [];
+    return (data || []).map(mapDbToTransaction);
   }
 
   async getRevenueByDate(date: string): Promise<number> {
@@ -105,9 +124,11 @@ class FinancialStore {
   }
 
   async updateTransaction(id: number, updates: Partial<Transaction>): Promise<Transaction | null> {
+    const updateObj: any = { ...updates };
+    if (updateObj.appointmentmtr === undefined) updateObj.appointmentmtr = 0;
     const { data, error } = await supabase
       .from('transactions')
-      .update(updates)
+      .update(updateObj)
       .eq('id', id)
       .select()
       .single();
@@ -115,7 +136,7 @@ class FinancialStore {
       console.error(`Erro ao atualizar transação ${id}:`, error);
       throw error;
     }
-    return data;
+    return data ? mapDbToTransaction(data) : null;
   }
 
   async deleteTransaction(id: number): Promise<boolean> {
@@ -132,3 +153,4 @@ class FinancialStore {
 }
 
 export const financialStore = new FinancialStore();
+

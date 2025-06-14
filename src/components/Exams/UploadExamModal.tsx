@@ -63,7 +63,7 @@ export const UploadExamModal: React.FC<UploadExamModalProps> = ({
           exam_type: formData.examType,
           exam_date: formData.date,
           observations: formData.observations,
-          files: uploadedFiles.map(f => ({ name: f.name, url: f.url, size: f.size })),
+          files: uploadedFiles.map(f => f.url), // URLs ONLY
           status: 'concluido'
         }]);
 

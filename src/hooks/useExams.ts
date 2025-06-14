@@ -8,7 +8,7 @@ export interface Exam {
   examType: string;
   date: string;
   status: 'pendente' | 'concluido';
-  files: string[];
+  files: string[]; // just urls
   observations?: string;
 }
 
@@ -30,7 +30,7 @@ export function useExams() {
         examType: exam.exam_type,
         date: exam.exam_date,
         status: exam.status,
-        files: exam.files || [],
+        files: exam.files || [], // just array of strings (urls)
         observations: exam.observations || '',
       }));
     },
