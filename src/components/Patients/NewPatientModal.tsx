@@ -33,34 +33,52 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ isOpen, onClos
   });
 
   useEffect(() => {
+    async function fetchDoctors() {
+      try {
+        const doctorsData = await doctorStore.getActiveDoctors();
+        setDoctors(doctorsData);
+      } catch (error) {
+        console.error('Erro ao buscar doutores:', error);
+        setDoctors([]);
+      }
+    }
     if (isOpen) {
-      setDoctors(doctorStore.getActiveDoctors());
+      fetchDoctors();
     }
   }, [isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Novo paciente:', formData);
     
-    const selectedDoctor = doctors.find(d => d.id === formData.preferredDoctorId);
-    
-    const newPatient = patientStore.addPatient({
-      ...formData,
-      preferredDoctor: selectedDoctor?.name || ''
-    });
-    
-    toast({
-      title: "Paciente cadastrado!",
-      description: `${formData.name} foi adicionado com sucesso`,
-    });
-    
-    onPatientAdded?.();
-    onClose();
-    setFormData({
-      name: '', email: '', phone: '', birthDate: '', cpf: '',
-      address: '', city: '', emergencyContact: '', emergencyPhone: '',
-      allergies: '', medications: '', notes: '', preferredDoctorId: 0, status: 'ativo'
-    });
+    try {
+      const selectedDoctor = doctors.find(d => d.id === formData.preferredDoctorId);
+      
+      await patientStore.addPatient({
+        ...formData,
+        preferredDoctor: selectedDoctor?.name || ''
+      });
+      
+      toast({
+        title: "Paciente cadastrado!",
+        description: `${formData.name} foi adicionado com sucesso`,
+      });
+      
+      onPatientAdded?.();
+      onClose();
+      setFormData({
+        name: '', email: '', phone: '', birthDate: '', cpf: '',
+        address: '', city: '', emergencyContact: '', emergencyPhone: '',
+        allergies: '', medications: '', notes: '', preferredDoctorId: 0, status: 'ativo'
+      });
+    } catch (error) {
+      console.error('Erro ao cadastrar paciente:', error);
+      toast({
+        title: "Erro ao cadastrar paciente",
+        description: "Ocorreu um erro ao tentar cadastrar o paciente. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

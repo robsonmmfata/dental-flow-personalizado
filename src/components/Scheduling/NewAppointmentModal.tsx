@@ -37,8 +37,13 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
   });
 
   useEffect(() => {
-    setDoctors(doctorStore.getActiveDoctors());
-    setPatients(patientStore.getActivePatients());
+    async function fetchData() {
+      const doctorsData = await doctorStore.getActiveDoctors();
+      const patientsData = await patientStore.getActivePatients();
+      setDoctors(doctorsData);
+      setPatients(patientsData);
+    }
+    fetchData();
     
     if (selectedPatient) {
       setFormData(prev => ({
@@ -49,7 +54,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
     }
   }, [selectedPatient]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.patientId || !formData.doctorId) {
@@ -64,7 +69,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
     const selectedDoctor = doctors.find(d => d.id === formData.doctorId);
     const selectedPatientData = patients.find(p => p.id === formData.patientId);
     
-    const newAppointment = appointmentStore.addAppointment({
+    const newAppointment = await appointmentStore.addAppointment({
       patientName: selectedPatientData?.name || formData.patientName,
       patientId: formData.patientId,
       doctorName: selectedDoctor?.name || '',
@@ -79,7 +84,7 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
 
     // Adicionar transação financeira se valor foi especificado
     if (formData.serviceValue > 0) {
-      financialStore.addAppointmentTransaction(
+      await financialStore.addAppointmentTransaction(
         formData.patientName,
         formData.service || 'Consulta',
         formData.serviceValue,
@@ -87,6 +92,13 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
         newAppointment.id
       );
     }
+
+    // Atualizar paciente com última e próxima consulta
+    const today = new Date().toISOString().split('T')[0];
+    await patientStore.updatePatient(formData.patientId, {
+      lastVisit: today,
+      nextAppointment: formData.date
+    });
 
     console.log('Nova consulta agendada:', newAppointment);
     
@@ -96,6 +108,10 @@ export const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
     });
     
     onClose();
+    // Refresh patients list after scheduling
+    const refreshedPatients = await patientStore.getActivePatients();
+    setPatients(refreshedPatients);
+
     setFormData({
       patientName: '', patientId: 0, doctorId: 0,
       date: selectedDate.toISOString().split('T')[0],

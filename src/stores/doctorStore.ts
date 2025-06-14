@@ -1,5 +1,6 @@
+import { supabase } from '../lib/supabaseClient';
 
-interface Doctor {
+export interface Doctor {
   id: number;
   name: string;
   cro: string;
@@ -11,80 +12,74 @@ interface Doctor {
 }
 
 class DoctorStore {
-  private doctors: Doctor[] = [
-    {
-      id: 1,
-      name: 'Dr. Silva',
-      cro: 'CRO-SP 12345',
-      specialty: 'Clínico Geral',
-      email: 'dr.silva@espacosorriso.com',
-      phone: '(11) 99999-9999',
-      status: 'ativo',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 2,
-      name: 'Dra. Santos',
-      cro: 'CRO-SP 54321',
-      specialty: 'Ortodontia',
-      email: 'dra.santos@espacosorriso.com',
-      phone: '(11) 88888-8888',
-      status: 'ativo',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 3,
-      name: 'Dr. Costa',
-      cro: 'CRO-SP 67890',
-      specialty: 'Endodontia',
-      email: 'dr.costa@espacosorriso.com',
-      phone: '(11) 77777-7777',
-      status: 'ativo',
-      createdAt: new Date().toISOString()
+  async getAllDoctors(): Promise<Doctor[]> {
+    const { data, error } = await supabase
+      .from<Doctor, Doctor>('doctors')
+      .select('*');
+    if (error) {
+      throw error;
     }
-  ];
-
-  addDoctor(doctorData: Omit<Doctor, 'id' | 'createdAt'>): Doctor {
-    const newDoctor: Doctor = {
-      ...doctorData,
-      id: Math.max(...this.doctors.map(d => d.id), 0) + 1,
-      createdAt: new Date().toISOString()
-    };
-    
-    this.doctors.push(newDoctor);
-    return newDoctor;
+    return data || [];
   }
 
-  getAllDoctors(): Doctor[] {
-    return [...this.doctors];
-  }
-
-  getActiveDoctors(): Doctor[] {
-    return this.doctors.filter(doctor => doctor.status === 'ativo');
-  }
-
-  updateDoctor(id: number, updates: Partial<Doctor>): Doctor | null {
-    const index = this.doctors.findIndex(d => d.id === id);
-    if (index !== -1) {
-      this.doctors[index] = { ...this.doctors[index], ...updates };
-      return this.doctors[index];
+  async getActiveDoctors(): Promise<Doctor[]> {
+    const { data, error } = await supabase
+      .from<Doctor, Doctor>('doctors')
+      .select('*')
+      .eq('status', 'ativo');
+    if (error) {
+      throw error;
     }
-    return null;
+    return data || [];
   }
 
-  deleteDoctor(id: number): boolean {
-    const index = this.doctors.findIndex(d => d.id === id);
-    if (index !== -1) {
-      this.doctors.splice(index, 1);
-      return true;
+  async addDoctor(doctorData: Omit<Doctor, 'id' | 'createdAt'>): Promise<Doctor> {
+    const { data, error } = await supabase
+      .from<Doctor, Doctor>('doctors')
+      .insert([{ ...doctorData, createdat: new Date().toISOString() }])
+      .select()
+      .single();
+    if (error) {
+      throw error;
     }
-    return false;
+    return data;
   }
 
-  getDoctorById(id: number): Doctor | null {
-    return this.doctors.find(d => d.id === id) || null;
+  async updateDoctor(id: number, updates: Partial<Doctor>): Promise<Doctor | null> {
+    const { data, error } = await supabase
+      .from<Doctor, Doctor>('doctors')
+      .update(updates)
+      .eq('id', id)
+      .select('id, name, cro, specialty, email, phone, status, createdat')
+      .single();
+    if (error) {
+      throw error;
+    }
+    return data;
+  }
+
+  async deleteDoctor(id: number): Promise<boolean> {
+    const { error } = await supabase
+      .from<Doctor, Doctor>('doctors')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      throw error;
+    }
+    return true;
+  }
+
+  async getDoctorById(id: number): Promise<Doctor | null> {
+    const { data, error } = await supabase
+      .from<Doctor, Doctor>('doctors')
+      .select('id, name, cro, specialty, email, phone, status, createdat')
+      .eq('id', id)
+      .single();
+    if (error) {
+      throw error;
+    }
+    return data;
   }
 }
 
 export const doctorStore = new DoctorStore();
-export type { Doctor };

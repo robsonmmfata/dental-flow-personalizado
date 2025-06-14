@@ -17,11 +17,29 @@ export const PatientsView: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   
   useEffect(() => {
-    setPatients(patientStore.getAllPatients());
+    async function fetchPatients() {
+      const patientsData = await patientStore.getAllPatients();
+      if (Array.isArray(patientsData)) {
+        setPatients(patientsData);
+      } else {
+        setPatients([]);
+        console.error('patientStore.getAllPatients() retornou valor não esperado:', patientsData);
+      }
+    }
+    fetchPatients();
   }, []);
 
   const handlePatientAdded = () => {
-    setPatients(patientStore.getAllPatients());
+    async function fetchPatients() {
+      const patientsData = await patientStore.getAllPatients();
+      if (Array.isArray(patientsData)) {
+        setPatients(patientsData);
+      } else {
+        setPatients([]);
+        console.error('patientStore.getAllPatients() retornou valor não esperado:', patientsData);
+      }
+    }
+    fetchPatients();
   };
 
   const filteredPatients = patients.filter(patient =>

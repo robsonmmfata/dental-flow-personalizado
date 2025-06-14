@@ -13,7 +13,20 @@ export const DoctorsView: React.FC = () => {
   const [showEditDoctorModal, setShowEditDoctorModal] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [doctors, setDoctors] = useState<Doctor[]>(doctorStore.getAllDoctors());
+  const [doctors, setDoctors] = React.useState<Doctor[]>([]);
+
+  React.useEffect(() => {
+    async function fetchDoctors() {
+      try {
+        const doctorsData = await doctorStore.getAllDoctors();
+        setDoctors(doctorsData);
+      } catch (error) {
+        console.error('Erro ao buscar doutores:', error);
+        setDoctors([]);
+      }
+    }
+    fetchDoctors();
+  }, []);
 
   const filteredDoctors = doctors.filter(doctor =>
     doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -21,52 +34,92 @@ export const DoctorsView: React.FC = () => {
     doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleToggleStatus = (doctorId: number) => {
+  const handleToggleStatus = async (doctorId: number) => {
     const doctor = doctors.find(d => d.id === doctorId);
     if (doctor) {
-      const updatedDoctor = doctorStore.updateDoctor(doctorId, {
-        status: doctor.status === 'ativo' ? 'inativo' : 'ativo'
-      });
-      
-      if (updatedDoctor) {
-        setDoctors(doctorStore.getAllDoctors());
+      try {
+        const updatedDoctor = await doctorStore.updateDoctor(doctorId, {
+          status: doctor.status === 'ativo' ? 'inativo' : 'ativo'
+        });
+        
+        if (updatedDoctor) {
+          const doctorsData = await doctorStore.getAllDoctors();
+          setDoctors(doctorsData);
+          toast({
+            title: "Status atualizado!",
+            description: `${doctor.name} foi ${doctor.status === 'ativo' ? 'desativado' : 'ativado'} com sucesso.`,
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar status do doutor:', error);
         toast({
-          title: "Status atualizado!",
-          description: `${doctor.name} foi ${doctor.status === 'ativo' ? 'desativado' : 'ativado'} com sucesso.`,
+          title: "Erro ao atualizar status",
+          description: "Não foi possível atualizar o status do doutor. Tente novamente.",
+          variant: "destructive",
         });
       }
     }
   };
 
-  const handleDeleteDoctor = (doctorId: number) => {
+  const handleDeleteDoctor = async (doctorId: number) => {
     const doctor = doctors.find(d => d.id === doctorId);
     if (doctor && window.confirm(`Tem certeza que deseja excluir ${doctor.name}?`)) {
-      doctorStore.deleteDoctor(doctorId);
-      setDoctors(doctorStore.getAllDoctors());
+      try {
+        await doctorStore.deleteDoctor(doctorId);
+        const doctorsData = await doctorStore.getAllDoctors();
+        setDoctors(doctorsData);
+        toast({
+          title: "Doutor excluído!",
+          description: `${doctor.name} foi removido do sistema.`,
+        });
+      } catch (error) {
+        console.error('Erro ao excluir doutor:', error);
+        toast({
+          title: "Erro ao excluir doutor",
+          description: "Não foi possível excluir o doutor. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleAddDoctor = async (newDoctorData: Omit<Doctor, 'id' | 'createdAt'>) => {
+    try {
+      const newDoctor = await doctorStore.addDoctor(newDoctorData);
+      const doctorsData = await doctorStore.getAllDoctors();
+      setDoctors(doctorsData);
       toast({
-        title: "Doutor excluído!",
-        description: `${doctor.name} foi removido do sistema.`,
+        title: "Doutor cadastrado!",
+        description: `${newDoctor.name} foi adicionado ao sistema.`,
+      });
+    } catch (error) {
+      console.error('Erro ao cadastrar doutor:', error);
+      toast({
+        title: "Erro ao cadastrar doutor",
+        description: "Não foi possível cadastrar o doutor. Tente novamente.",
+        variant: "destructive",
       });
     }
   };
 
-  const handleAddDoctor = (newDoctorData: Omit<Doctor, 'id' | 'createdAt'>) => {
-    const newDoctor = doctorStore.addDoctor(newDoctorData);
-    setDoctors(doctorStore.getAllDoctors());
-    toast({
-      title: "Doutor cadastrado!",
-      description: `${newDoctor.name} foi adicionado ao sistema.`,
-    });
-  };
-
-  const handleEditDoctor = (doctorData: Omit<Doctor, 'id' | 'createdAt'>) => {
+  const handleEditDoctor = async (doctorData: Omit<Doctor, 'id' | 'createdAt'>) => {
     if (selectedDoctor) {
-      const updatedDoctor = doctorStore.updateDoctor(selectedDoctor.id, doctorData);
-      if (updatedDoctor) {
-        setDoctors(doctorStore.getAllDoctors());
+      try {
+        const updatedDoctor = await doctorStore.updateDoctor(selectedDoctor.id, doctorData);
+        if (updatedDoctor) {
+          const doctorsData = await doctorStore.getAllDoctors();
+          setDoctors(doctorsData);
+          toast({
+            title: "Doutor atualizado!",
+            description: `${updatedDoctor.name} foi atualizado com sucesso.`,
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar doutor:', error);
         toast({
-          title: "Doutor atualizado!",
-          description: `${updatedDoctor.name} foi atualizado com sucesso.`,
+          title: "Erro ao atualizar doutor",
+          description: "Não foi possível atualizar o doutor. Tente novamente.",
+          variant: "destructive",
         });
       }
     }

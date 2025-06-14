@@ -1,5 +1,6 @@
+import { supabase } from '../lib/supabaseClient';
 
-interface Appointment {
+export interface Appointment {
   id: number;
   patientName: string;
   patientId: number;
@@ -15,74 +16,62 @@ interface Appointment {
 }
 
 class AppointmentStore {
-  private appointments: Appointment[] = [
-    {
-      id: 1,
-      patientName: 'João Silva',
-      patientId: 1,
-      doctorName: 'Dr. Silva',
-      doctorId: 1,
-      dentist: 'Dr. Silva',
-      date: new Date().toISOString().split('T')[0],
-      time: '09:00',
-      service: 'Consulta',
-      status: 'agendado',
-      notes: 'Primeira consulta',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 2,
-      patientName: 'Maria Santos',
-      patientId: 2,
-      doctorName: 'Dr. Silva',
-      doctorId: 1,
-      dentist: 'Dr. Silva',
-      date: new Date().toISOString().split('T')[0],
-      time: '10:30',
-      service: 'Limpeza',
-      status: 'confirmado',
-      notes: 'Limpeza de rotina',
-      createdAt: new Date().toISOString()
+  async addAppointment(appointmentData: Omit<Appointment, 'id' | 'createdAt'>): Promise<Appointment> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert([{ ...appointmentData, createdat: new Date().toISOString() }])
+      .select('*')
+      .single();
+    if (error) {
+      throw error;
     }
-  ];
-
-  addAppointment(appointmentData: Omit<Appointment, 'id' | 'createdAt'>): Appointment {
-    const newAppointment: Appointment = {
-      ...appointmentData,
-      id: Math.max(...this.appointments.map(a => a.id), 0) + 1,
-      createdAt: new Date().toISOString()
-    };
-    
-    this.appointments.push(newAppointment);
-    return newAppointment;
+    return data;
   }
 
-  getAllAppointments(): Appointment[] {
-    return [...this.appointments];
-  }
-
-  getAppointmentsByDate(date: string): Appointment[] {
-    return this.appointments.filter(appointment => appointment.date === date);
-  }
-
-  updateAppointment(id: number, updates: Partial<Appointment>): Appointment | null {
-    const index = this.appointments.findIndex(a => a.id === id);
-    if (index !== -1) {
-      this.appointments[index] = { ...this.appointments[index], ...updates };
-      return this.appointments[index];
+  async getAllAppointments(): Promise<Appointment[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*');
+    if (error) {
+      throw error;
     }
-    return null;
+    return data || [];
   }
 
-  deleteAppointment(id: number): boolean {
-    const index = this.appointments.findIndex(a => a.id === id);
-    if (index !== -1) {
-      this.appointments.splice(index, 1);
-      return true;
+  async getAppointmentsByDate(date: string): Promise<Appointment[]> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('date', date);
+    if (error) {
+      throw error;
     }
-    return false;
+    return data || [];
+  }
+
+  async updateAppointment(id: number, updates: Partial<Appointment>): Promise<Appointment | null> {
+    const { data, error } = await supabase
+      .from('appointments')
+      .update(updates)
+      .eq('id', id)
+      .select('*')
+      .single();
+    if (error) {
+      throw error;
+    }
+    return data;
+  }
+
+  async deleteAppointment(id: number): Promise<boolean> {
+    const { error } = await supabase
+      .from('appointments')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      throw error;
+    }
+    return true;
   }
 }
 
 export const appointmentStore = new AppointmentStore();
-export type { Appointment };

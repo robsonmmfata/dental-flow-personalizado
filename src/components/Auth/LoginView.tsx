@@ -3,18 +3,11 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '../../lib/supabaseClient';
 
 interface LoginViewProps {
   onLoginSuccess: () => void;
 }
-
-// Usuário assistente (único permitido)
-const registeredUser = {
-  email: 'assistente@dentalcare.com',
-  password: '123456',
-  name: 'Ana Costa',
-  role: 'assistant'
-};
 
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const { toast } = useToast();
@@ -24,23 +17,43 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     password: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Verificar login apenas para assistente
-    if (formData.email === registeredUser.email && formData.password === registeredUser.password) {
-      localStorage.setItem('currentUser', JSON.stringify(registeredUser));
+
+    try {
+      const { data, error } = await supabase
+        .from('custom_users')
+        .select('*')
+        .eq('email', formData.email)
+        .single();
+
+      if (error || !data) {
+        toast({
+          title: "Erro no login",
+          description: "Email ou senha incorretos.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data.password !== formData.password) {
+        toast({
+          title: "Erro no login",
+          description: "Email ou senha incorretos.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       toast({
         title: "Login realizado!",
-        description: `Bem-vinda, ${registeredUser.name}!`,
+        description: `Bem-vinda, ${formData.email}!`,
       });
-      setTimeout(() => {
-        onLoginSuccess();
-      }, 1000);
-    } else {
+      onLoginSuccess();
+    } catch (err) {
       toast({
         title: "Erro no login",
-        description: "Email ou senha incorretos.",
+        description: "Erro inesperado ao tentar logar.",
         variant: "destructive"
       });
     }

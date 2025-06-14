@@ -11,26 +11,30 @@ export const FinancialView: React.FC = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [todayStats, setTodayStats] = useState({
-    revenue: 0,
-    expenses: 0,
-    profit: 0
+  const [todayStats, setTodayStats] = useState<{
+    revenue: number | null;
+    expenses: number | null;
+    profit: number | null;
+  }>({
+    revenue: null,
+    expenses: null,
+    profit: null
   });
   
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    const updateData = () => {
-      const allTransactions = financialStore.getAllTransactions();
+    async function updateData() {
+      const allTransactions = await financialStore.getAllTransactions();
       setTransactions(allTransactions);
       
-      const revenue = financialStore.getRevenueByDate(today);
-      const expenses = financialStore.getExpensesByDate(today);
-      const profit = financialStore.getDailyProfit(today);
+      const revenue = await financialStore.getRevenueByDate(today);
+      const expenses = await financialStore.getExpensesByDate(today);
+      const profit = await financialStore.getDailyProfit(today);
       
       setTodayStats({ revenue, expenses, profit });
       console.log('Financeiro atualizado:', { revenue, expenses, profit });
-    };
+    }
 
     updateData();
     const unsubscribe = financialStore.subscribe(updateData);
@@ -93,23 +97,23 @@ export const FinancialView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard
           title="Receita do Dia"
-          value={`R$ ${todayStats.revenue.toFixed(2)}`}
+          value={`R$ ${todayStats.revenue !== null ? todayStats.revenue.toFixed(2) : '0.00'}`}
           icon={TrendingUp}
           trend={{ value: 12.5, isPositive: true }}
           color="sage"
         />
         <StatsCard
           title="Despesa do Dia"
-          value={`R$ ${todayStats.expenses.toFixed(2)}`}
+          value={`R$ ${todayStats.expenses !== null ? todayStats.expenses.toFixed(2) : '0.00'}`}
           icon={TrendingDown}
           trend={{ value: 5.2, isPositive: false }}
           color="nude"
         />
         <StatsCard
           title="Lucro Líquido Diário"
-          value={`R$ ${todayStats.profit.toFixed(2)}`}
+          value={`R$ ${todayStats.profit !== null ? todayStats.profit.toFixed(2) : '0.00'}`}
           icon={DollarSign}
-          trend={{ value: 18.3, isPositive: todayStats.profit > 0 }}
+          trend={{ value: 18.3, isPositive: todayStats.profit !== null && todayStats.profit > 0 }}
           color="gold"
         />
       </div>

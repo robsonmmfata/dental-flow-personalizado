@@ -1,5 +1,6 @@
+import { supabase } from '../lib/supabaseClient';
 
-interface Transaction {
+export interface Transaction {
   id: number;
   date: string;
   description: string;
@@ -8,61 +9,25 @@ interface Transaction {
   category: string;
   status: 'confirmado' | 'pendente';
   patientId?: number;
-  appointmentId?: number;
-  createdAt: string;
+  appointmentmtr?: number;
+  createdat: string; // ALTERADO: Renomeado de 'createdAt' para 'createdat' (minúsculo)
 }
 
 class FinancialStore {
-  private transactions: Transaction[] = [
-    { 
-      id: 1, 
-      date: new Date().toISOString().split('T')[0], 
-      description: 'Consulta - Maria Silva', 
-      type: 'receita', 
-      value: 150, 
-      category: 'Consultas', 
-      status: 'confirmado',
-      patientId: 1,
-      createdAt: new Date().toISOString()
-    },
-    { 
-      id: 2, 
-      date: new Date().toISOString().split('T')[0], 
-      description: 'Orçamento - João Santos', 
-      type: 'receita', 
-      value: 800, 
-      category: 'Orçamentos', 
-      status: 'pendente',
-      patientId: 2,
-      createdAt: new Date().toISOString()
-    },
-    { 
-      id: 3, 
-      date: new Date().toISOString().split('T')[0], 
-      description: 'Material Odontológico', 
-      type: 'despesa', 
-      value: 320, 
-      category: 'Materiais', 
-      status: 'confirmado',
-      createdAt: new Date().toISOString()
+  async addTransaction(transactionData: Omit<Transaction, 'id' | 'createdat'>): Promise<Transaction> {
+    const { data, error } = await supabase
+      .from<Transaction>('transactions')
+      .insert([{ ...transactionData, createdat: new Date().toISOString() }])
+      .select()
+      .single();
+    if (error) {
+      console.error('Erro ao adicionar transação:', error); // Adicionei um log de erro aqui para depuração
+      throw error;
     }
-  ];
-
-  private listeners: (() => void)[] = [];
-
-  addTransaction(transactionData: Omit<Transaction, 'id' | 'createdAt'>): Transaction {
-    const newTransaction: Transaction = {
-      ...transactionData,
-      id: Math.max(...this.transactions.map(t => t.id), 0) + 1,
-      createdAt: new Date().toISOString()
-    };
-    
-    this.transactions.push(newTransaction);
-    this.notifyListeners();
-    return newTransaction;
+    return data;
   }
 
-  addAppointmentTransaction(patientName: string, service: string, value: number, patientId?: number, appointmentId?: number): Transaction {
+  async addAppointmentTransaction(patientName: string, service: string, value: number, patientId?: number, appointmentmtr?: number): Promise<Transaction> {
     return this.addTransaction({
       date: new Date().toISOString().split('T')[0],
       description: `${service} - ${patientName}`,
@@ -71,63 +36,101 @@ class FinancialStore {
       category: 'Consultas',
       status: 'confirmado',
       patientId,
-      appointmentId
+      appointmentmtr
     });
   }
 
-  getAllTransactions(): Transaction[] {
-    return [...this.transactions];
+  async getAllTransactions(): Promise<Transaction[]> {
+    const { data, error } = await supabase
+      .from<Transaction>('transactions')
+      .select('*');
+    if (error) {
+      console.error('Erro ao buscar todas as transações:', error); // Adicionei um log de erro
+      throw error;
+    }
+    return data || [];
   }
 
-  getTransactionsByDate(date: string): Transaction[] {
-    return this.transactions.filter(t => t.date === date);
+  async getTransactionsByDate(date: string): Promise<Transaction[]> {
+    const { data, error } = await supabase
+      .from<Transaction>('transactions')
+      .select('*')
+      .eq('date', date);
+    if (error) {
+      console.error(`Erro ao buscar transações pela data ${date}:`, error); // Adicionei um log de erro
+      throw error;
+    }
+    return data || [];
   }
 
-  getRevenueByDate(date: string): number {
-    return this.transactions
-      .filter(t => t.date === date && t.type === 'receita' && t.status === 'confirmado')
-      .reduce((sum, t) => sum + t.value, 0);
+  async getRevenueByDate(date: string): Promise<number> {
+    const { data, error } = await supabase
+      .from<Transaction>('transactions')
+      .select('value')
+      .eq('date', date)
+      .eq('type', 'receita')
+      .eq('status', 'confirmado');
+    if (error) {
+      console.error(`Erro ao buscar receita pela data ${date}:`, error); // Adicionei um log de erro
+      throw error;
+    }
+    return data?.reduce((sum, t) => sum + t.value, 0) || 0;
   }
 
-  getExpensesByDate(date: string): number {
-    return this.transactions
-      .filter(t => t.date === date && t.type === 'despesa' && t.status === 'confirmado')
-      .reduce((sum, t) => sum + t.value, 0);
+  async getExpensesByDate(date: string): Promise<number> {
+    const { data, error } = await supabase
+      .from<Transaction>('transactions')
+      .select('value')
+      .eq('date', date)
+      .eq('type', 'despesa')
+      .eq('status', 'confirmado');
+    if (error) {
+      console.error(`Erro ao buscar despesas pela data ${date}:`, error); // Adicionei um log de erro
+      throw error;
+    }
+    return data?.reduce((sum, t) => sum + t.value, 0) || 0;
   }
 
-  getDailyProfit(date: string): number {
-    return this.getRevenueByDate(date) - this.getExpensesByDate(date);
+  async getDailyProfit(date: string): Promise<number> {
+    const revenue = await this.getRevenueByDate(date);
+    const expenses = await this.getExpensesByDate(date);
+    return revenue - expenses;
   }
 
   subscribe(listener: () => void): () => void {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
+    // React Query or other mechanism should be used instead of listeners
+    // This method can be deprecated or adapted as needed
+    return () => {};
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(listener => listener());
+    // Deprecated with React Query
   }
 
-  updateTransaction(id: number, updates: Partial<Transaction>): Transaction | null {
-    const index = this.transactions.findIndex(t => t.id === id);
-    if (index !== -1) {
-      this.transactions[index] = { ...this.transactions[index], ...updates };
-      this.notifyListeners();
-      return this.transactions[index];
+  async updateTransaction(id: number, updates: Partial<Transaction>): Promise<Transaction | null> {
+    const { data, error } = await supabase
+      .from<Transaction>('transactions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error(`Erro ao atualizar transação ${id}:`, error); // Adicionei um log de erro
+      throw error;
     }
-    return null;
+    return data;
   }
 
-  deleteTransaction(id: number): boolean {
-    const index = this.transactions.findIndex(t => t.id === id);
-    if (index !== -1) {
-      this.transactions.splice(index, 1);
-      this.notifyListeners();
-      return true;
+  async deleteTransaction(id: number): Promise<boolean> {
+    const { error } = await supabase
+      .from<Transaction>('transactions')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error(`Erro ao deletar transação ${id}:`, error); // Adicionei um log de erro
+      throw error;
     }
-    return false;
+    return true;
   }
 }
 
