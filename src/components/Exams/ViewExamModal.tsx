@@ -20,7 +20,7 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
       generateExamPDF(exam);
       toast({
         title: "Download iniciado!",
-        description: `Download do exame de ${exam.patientName} realizado com sucesso.`,
+        description: `Download do exame de ${exam.patient_name || exam.patientName} realizado com sucesso.`,
       });
     }
   };
@@ -46,8 +46,8 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
                   Informações do Paciente
                 </h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="font-medium">Nome:</span> {exam.patientName}</div>
-                  <div><span className="font-medium">Tipo de Exame:</span> {exam.examType}</div>
+                  <div><span className="font-medium">Nome:</span> {exam.patient_name || exam.patientName}</div>
+                  <div><span className="font-medium">Tipo de Exame:</span> {exam.exam_type || exam.examType}</div>
                   <div><span className="font-medium">Status:</span> {exam.status}</div>
                 </div>
               </div>
@@ -58,8 +58,14 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
                   Detalhes do Exame
                 </h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="font-medium">Data:</span> {new Date(exam.date).toLocaleDateString('pt-BR')}</div>
-                  <div><span className="font-medium">Arquivos:</span> {exam.files.length > 0 ? exam.files.join(', ') : 'Nenhum arquivo'}</div>
+                  <div><span className="font-medium">Data:</span> {new Date(exam.exam_date || exam.date).toLocaleDateString('pt-BR')}</div>
+                  <div><span className="font-medium">Arquivos:</span> {
+                    exam.files && exam.files.length > 0 
+                      ? Array.isArray(exam.files[0]) 
+                        ? exam.files.map((f: any) => f.name).join(', ')
+                        : exam.files.join(', ')
+                      : 'Nenhum arquivo'
+                  }</div>
                 </div>
               </div>
             </div>
@@ -68,12 +74,12 @@ export const ViewExamModal: React.FC<ViewExamModalProps> = ({ isOpen, onClose, e
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
                 <FileText size={64} className="mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-600 mb-2">Visualização do arquivo</p>
-                <p className="text-sm text-gray-500 mb-4">{exam.examType}</p>
+                <p className="text-sm text-gray-500 mb-4">{exam.exam_type || exam.examType}</p>
                 <p className="text-xs text-gray-400">
-                  {exam.examType === 'Radiografia Panorâmica' && 'Imagem radiográfica panorâmica'}
-                  {exam.examType === 'Tomografia' && 'Arquivo DICOM de tomografia'}
-                  {exam.examType === 'Radiografia Periapical' && 'Radiografia periapical'}
-                  {!['Radiografia Panorâmica', 'Tomografia', 'Radiografia Periapical'].includes(exam.examType) && 'Arquivo anexo do exame'}
+                  {(exam.exam_type || exam.examType) === 'Radiografia Panorâmica' && 'Imagem radiográfica panorâmica'}
+                  {(exam.exam_type || exam.examType) === 'Tomografia' && 'Arquivo DICOM de tomografia'}
+                  {(exam.exam_type || exam.examType) === 'Radiografia Periapical' && 'Radiografia periapical'}
+                  {!['Radiografia Panorâmica', 'Tomografia', 'Radiografia Periapical'].includes(exam.exam_type || exam.examType) && 'Arquivo anexo do exame'}
                 </p>
               </div>
               

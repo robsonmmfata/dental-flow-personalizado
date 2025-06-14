@@ -1,104 +1,128 @@
 
+import React from 'react';
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabaseClient';
+
+interface GlobalState {
+  isLoading: boolean;
+  notifications: Notification[];
+  user: any;
+  setLoading: (loading: boolean) => void;
+  addNotification: (notification: Omit<Notification, 'id'>) => void;
+  removeNotification: (id: string) => void;
+  setUser: (user: any) => void;
+  checkAuthStatus: () => Promise<void>;
+}
 
 interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  timestamp: string;
-  read: boolean;
-}
-
-interface GlobalState {
-  notifications: Notification[];
-  isOnline: boolean;
-  lastSync: string | null;
-  loading: boolean;
-  
-  // Actions
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
-  markNotificationAsRead: (id: string) => void;
-  clearNotifications: () => void;
-  setOnlineStatus: (status: boolean) => void;
-  updateLastSync: () => void;
-  setLoading: (loading: boolean) => void;
+  type: 'success' | 'error' | 'warning' | 'info';
+  timestamp: Date;
 }
 
 export const useGlobalStore = create<GlobalState>((set, get) => ({
+  isLoading: false,
   notifications: [],
-  isOnline: true,
-  lastSync: null,
-  loading: false,
+  user: null,
 
-  addNotification: (notification) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: Math.random().toString(36).substring(2),
-      timestamp: new Date().toISOString(),
-      read: false
-    };
-    
-    set((state) => ({
-      notifications: [newNotification, ...state.notifications.slice(0, 49)] // Manter apenas 50 notificações
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
+
+  addNotification: (notification: Omit<Notification, 'id'>) => {
+    const id = Date.now().toString();
+    const newNotification = { ...notification, id, timestamp: new Date() };
+    set(state => ({
+      notifications: [...state.notifications, newNotification]
+    }));
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      get().removeNotification(id);
+    }, 5000);
+  },
+
+  removeNotification: (id: string) => {
+    set(state => ({
+      notifications: state.notifications.filter(n => n.id !== id)
     }));
   },
 
-  markNotificationAsRead: (id) => {
-    set((state) => ({
-      notifications: state.notifications.map(n => 
-        n.id === id ? { ...n, read: true } : n
-      )
-    }));
-  },
+  setUser: (user: any) => set({ user }),
 
-  clearNotifications: () => {
-    set({ notifications: [] });
-  },
-
-  setOnlineStatus: (status) => {
-    set({ isOnline: status });
-  },
-
-  updateLastSync: () => {
-    set({ lastSync: new Date().toISOString() });
-  },
-
-  setLoading: (loading) => {
-    set({ loading });
+  checkAuthStatus: async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      set({ user: session?.user || null });
+    } catch (error) {
+      console.error('Erro ao verificar status de autenticação:', error);
+      set({ user: null });
+    }
   }
 }));
 
-// Hook para monitorar conectividade
-export const useConnectivityMonitor = () => {
-  const { setOnlineStatus, addNotification } = useGlobalStore();
+// Hook para notificações React
+export const useNotifications = () => {
+  const { notifications, addNotification, removeNotification } = useGlobalStore();
 
-  React.useEffect(() => {
-    const handleOnline = () => {
-      setOnlineStatus(true);
-      addNotification({
-        title: 'Conexão restaurada',
-        message: 'Você está online novamente',
-        type: 'success'
-      });
-    };
+  const showSuccess = (title: string, message: string) => {
+    addNotification({ title, message, type: 'success' });
+  };
 
-    const handleOffline = () => {
-      setOnlineStatus(false);
-      addNotification({
-        title: 'Sem conexão',
-        message: 'Você está trabalhando offline',
-        type: 'warning'
-      });
-    };
+  const showError = (title: string, message: string) => {
+    addNotification({ title, message, type: 'error' });
+  };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+  const showWarning = (title: string, message: string) => {
+    addNotification({ title, message, type: 'warning' });
+  };
 
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [setOnlineStatus, addNotification]);
+  const showInfo = (title: string, message: string) => {
+    addNotification({ title, message, type: 'info' });
+  };
+
+  return {
+    notifications,
+    showSuccess,
+    showError,
+    showWarning,
+    showInfo,
+    removeNotification
+  };
+};
+
+// Component de notificações
+export const NotificationContainer: React.FC = () => {
+  const { notifications, removeNotification } = useNotifications();
+
+  if (notifications.length === 0) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      {notifications.map((notification) => (
+        <div
+          key={notification.id}
+          className={`p-4 rounded-lg shadow-lg max-w-sm ${
+            notification.type === 'success' ? 'bg-green-500 text-white' :
+            notification.type === 'error' ? 'bg-red-500 text-white' :
+            notification.type === 'warning' ? 'bg-yellow-500 text-white' :
+            'bg-blue-500 text-white'
+          }`}
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="font-semibold">{notification.title}</h4>
+              <p className="text-sm opacity-90">{notification.message}</p>
+            </div>
+            <button
+              onClick={() => removeNotification(notification.id)}
+              className="ml-2 text-white opacity-70 hover:opacity-100"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 };
