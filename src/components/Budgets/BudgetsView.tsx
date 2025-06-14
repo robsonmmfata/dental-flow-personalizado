@@ -16,6 +16,17 @@ export const BudgetsView: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
 
+  // Helper: convert camelCase budget to snake_case for Supabase update
+  const toSupabaseBudget = (budget: Partial<Budget>) => ({
+    ...(budget.patientName !== undefined && { patientname: budget.patientName }),
+    ...(budget.procedures !== undefined && { procedures: budget.procedures }),
+    ...(budget.totalValue !== undefined && { totalvalue: budget.totalValue }),
+    ...(budget.paymentMethod !== undefined && { paymentmethod: budget.paymentMethod }),
+    ...(budget.status !== undefined && { status: budget.status }),
+    ...(budget.createdAt !== undefined && { createdat: budget.createdAt }),
+    ...(budget.dueDate !== undefined && { duedate: budget.dueDate }),
+  });
+
   // Query budgets from Supabase, mapping to camelCase
   const { data: budgets = [], isLoading } = useQuery({
     queryKey: ['budgets'],
@@ -42,14 +53,28 @@ export const BudgetsView: React.FC = () => {
   // Update budget status
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<Budget> }) => {
+      // Convert any updates to supabase format
+      const updatesForSupabase = toSupabaseBudget(updates);
       const { data, error } = await supabase
         .from('budgets')
-        .update(updates)
+        .update(updatesForSupabase)
         .eq('id', id)
         .select()
         .maybeSingle();
       if (error) throw error;
-      return data;
+      // Map result back to camelCase if needed
+      return data
+        ? {
+            id: data.id,
+            patientName: data.patientname,
+            procedures: data.procedures,
+            totalValue: data.totalvalue,
+            paymentMethod: data.paymentmethod,
+            status: data.status,
+            createdAt: data.createdat,
+            dueDate: data.duedate,
+          }
+        : null;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['budgets'] })
   });
