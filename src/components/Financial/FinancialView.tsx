@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '../Dashboard/StatsCard';
 import { TransactionModal } from './TransactionModal';
 import { FilterModal } from './FilterModal';
+import { MonthlyGoalModal } from './MonthlyGoalModal';
 import { financialStore } from '@/stores/financialStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -13,6 +13,7 @@ export const FinancialView: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'month'>('day');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showMonthlyGoalModal, setShowMonthlyGoalModal] = useState(false);
   const [monthlyGoal, setMonthlyGoal] = useState<number>(15000); // valor inicial, pode ser alterado pelo usuário
 
   const today = new Date().toISOString().split('T')[0];
@@ -59,14 +60,9 @@ export const FinancialView: React.FC = () => {
     setShowTransactionModal(false);
   };
 
-  // Abrir um prompt para definir meta mensal (pode ser substituído por modal customizado depois)
+  // Novo: abrir o modal ao invés do prompt
   const handleSetMonthlyGoal = () => {
-    const goalStr = window.prompt('Defina o valor da meta mensal (R$):', monthlyGoal?.toString() || '15000');
-    if (!goalStr) return;
-    const valueNum = parseFloat(goalStr.replace(',', '.'));
-    if (!isNaN(valueNum) && valueNum > 0) {
-      setMonthlyGoal(valueNum);
-    }
+    setShowMonthlyGoalModal(true);
   };
 
   // Get progress
@@ -286,6 +282,12 @@ export const FinancialView: React.FC = () => {
       <FilterModal
         isOpen={showFilterModal}
         onClose={() => setShowFilterModal(false)}
+      />
+      <MonthlyGoalModal
+        isOpen={showMonthlyGoalModal}
+        initialGoal={monthlyGoal}
+        onClose={() => setShowMonthlyGoalModal(false)}
+        onSave={goal => setMonthlyGoal(goal)}
       />
     </div>
   );
