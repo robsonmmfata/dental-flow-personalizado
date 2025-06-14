@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FileText, Edit, Check, Clock, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ export const BudgetsView: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
 
-  // Query budgets from Supabase
+  // Query budgets from Supabase, mapping to camelCase
   const { data: budgets = [], isLoading } = useQuery({
     queryKey: ['budgets'],
     queryFn: async () => {
@@ -26,7 +25,17 @@ export const BudgetsView: React.FC = () => {
         .select('*')
         .order('createdat', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      // Map each record to camelCase to match Budget type
+      return (data ?? []).map((budget) => ({
+        id: budget.id,
+        patientName: budget.patientname,
+        procedures: budget.procedures,
+        totalValue: budget.totalvalue,
+        paymentMethod: budget.paymentmethod,
+        status: budget.status,
+        createdAt: budget.createdat,
+        dueDate: budget.duedate,
+      }));
     }
   });
 
@@ -155,7 +164,7 @@ export const BudgetsView: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Valor Total Pendente</p>
               <p className="text-2xl font-bold text-dental-gold">
-                R$ {budgets.filter(b => b.status === 'pendente').reduce((sum, b) => sum + (b.totalvalue||0), 0).toFixed(2)}
+                R$ {budgets.filter(b => b.status === 'pendente').reduce((sum, b) => sum + (b.totalValue||0), 0).toFixed(2)}
               </p>
             </div>
             <DollarSign size={24} className="text-dental-gold" />
@@ -196,13 +205,13 @@ export const BudgetsView: React.FC = () => {
                       <FileText size={20} className="text-dental-gold" />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">#{budget.id} - {budget.patientname}</div>
+                      <div className="font-medium text-gray-900">#{budget.id} - {budget.patientName}</div>
                       <div className="text-sm text-gray-600">
                         Procedimentos: {budget.procedures.join(', ')}
                       </div>
                       <div className="text-sm text-gray-600">
-                        Criado em: {budget.createdat && (new Date(budget.createdat).toLocaleDateString('pt-BR'))} • 
-                        Vencimento: {budget.duedate && (new Date(budget.duedate).toLocaleDateString('pt-BR'))}
+                        Criado em: {budget.createdAt && (new Date(budget.createdAt).toLocaleDateString('pt-BR'))} • 
+                        Vencimento: {budget.dueDate && (new Date(budget.dueDate).toLocaleDateString('pt-BR'))}
                       </div>
                     </div>
                   </div>
@@ -211,14 +220,14 @@ export const BudgetsView: React.FC = () => {
                     <div className="text-center">
                       <div className="text-xs text-gray-500">Valor Total</div>
                       <div className="font-bold text-dental-gold text-lg">
-                        R$ {(budget.totalvalue || 0).toFixed(2)}
+                        R$ {(budget.totalValue || 0).toFixed(2)}
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <div className="text-xs text-gray-500">Pagamento</div>
                       <div className="font-medium text-gray-900">
-                        {budget.paymentmethod}
+                        {budget.paymentMethod}
                       </div>
                     </div>
                     
